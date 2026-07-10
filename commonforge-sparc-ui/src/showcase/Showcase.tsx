@@ -6,6 +6,10 @@ import { SeparatorShowcase } from "./Separator"
 import { BadgeShowcase } from "./Badge"
 import { TextInputShowcase, SearchFieldShowcase } from "./FormFields"
 import { AccountSwitcherShowcase } from "./AccountSwitcher"
+import { BreadcrumbShowcase } from "./Breadcrumb"
+import { KpiCardShowcase } from "./KpiCard"
+import { SegmentedButtonShowcase } from "./SegmentedButton"
+import { LegendShowcase } from "./Legend"
 import { SidebarShowcase } from "./Sidebar"
 
 /** The component library reference page. Reachable at #showcase. */
@@ -29,6 +33,10 @@ export function Showcase() {
         <TextInputShowcase />
         <SearchFieldShowcase />
         <AccountSwitcherShowcase />
+        <BreadcrumbShowcase />
+        <KpiCardShowcase />
+        <SegmentedButtonShowcase />
+        <LegendShowcase />
         <SidebarShowcase />
       </main>
     </div>

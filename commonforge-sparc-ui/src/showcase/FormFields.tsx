@@ -56,7 +56,13 @@ export function TextInputShowcase() {
           <TextInput disabled placeholder="Enter your full name" leading={lead} trailing={trail} />
         </Row>
         <Row label="small">
-          <TextInput size="sm" placeholder="Enter your full name" />
+          <TextInput size="sm" placeholder="Enter your full name" leading={<Circle size={12} />} trailing={<Circle size={12} />} />
+        </Row>
+        <Row label="small error">
+          <TextInput size="sm" error defaultValue="Enter your full name" leading={<Circle size={12} />} />
+        </Row>
+        <Row label="small disabled">
+          <TextInput size="sm" disabled placeholder="Enter your full name" leading={<Circle size={12} />} />
         </Row>
         <Row label="prefix">
           <TextInput prefix={<LabelAddon />} placeholder="Enter your full name" />
@@ -90,17 +96,11 @@ export function SearchFieldShowcase() {
         <Row label="disabled">
           <SearchField disabled />
         </Row>
-        <Row label="compact ⌘K">
-          {/* the sidebar variant: smaller icon/padding, 0.6px border, shadow, kbd hint */}
-          <div className="w-56 rounded-md bg-background p-1.5">
-            <SearchField
-              size="sm"
-              iconSize={14}
-              shortcut="⌘K"
-              fieldClassName="py-1 pl-2 pr-1"
-              containerClassName="border-[0.6px] shadow-[0_0.5px_2px_rgba(0,0,0,0.05)]"
-            />
-          </div>
+        <Row label="small">
+          <SearchField size="sm" placeholder="Search projects" />
+        </Row>
+        <Row label="small ⌘K">
+          <SearchField size="sm" shortcut="⌘K" placeholder="Search projects" />
         </Row>
 
         <Row label="with results">

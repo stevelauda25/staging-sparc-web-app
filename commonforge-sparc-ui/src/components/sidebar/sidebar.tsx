@@ -229,7 +229,7 @@ export function Sidebar({ header, className }: SidebarProps) {
     <aside
       className={cn(
         // fills the viewport height with plain flexbox: fixed header, scrolling
-        // nav, pinned footer. Width in rem so it tracks the density knob.
+        // nav, pinned footer. Width in rem (17rem = 272px) so it tracks the knob.
         "flex h-full w-[15rem] flex-col bg-background p-2",
         className,
       )}
@@ -238,14 +238,13 @@ export function Sidebar({ header, className }: SidebarProps) {
       <div className="shrink-0">
         <AccountSwitcher name="Jason Heim" initials="JH" role="Admin" />
         <div className="mt-3">
+          {/* small search-field, tuned to the sidebar's compact 26px density */}
           <SearchField
             size="sm"
-            iconSize={12}
             shortcut="⌘K"
             placeholder="Search projects"
-            className="text-xs leading-4"
             fieldClassName="py-1 pl-2 pr-1"
-            containerClassName="h-[1.625rem] border-[0.6px] shadow-[0_0.5px_2px_rgba(0,0,0,0.05)]"
+            containerClassName="h-[26px] border-[0.6px] shadow-[0_0.5px_2px_rgba(0,0,0,0.05)]"
           />
         </div>
         {header}

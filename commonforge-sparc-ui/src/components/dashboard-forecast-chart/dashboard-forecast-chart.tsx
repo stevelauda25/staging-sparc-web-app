@@ -1,8 +1,10 @@
-import { Fragment, useLayoutEffect, useRef, useState } from "react"
+import { useState, type PointerEvent } from "react"
 import { ChevronDown, ChevronRight } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
+import { SegmentedButton } from "@/components/segmented-button"
+import { Legend } from "@/components/legend"
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const MONTHS = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"]
 const Y_TICKS = [220, 200, 180, 160, 140, 120, 100, 80, 60, 40, 20, 0]
 
 const SERIES = [
@@ -10,42 +12,39 @@ const SERIES = [
     id: "assigned",
     label: "Assigned workers",
     color: "#352e29",
-    values: [148, 145, 115, 124, 142, 136, 128, 100, 38, 60, 88, 115],
+    values: [100, 38, 60, 88, 115, 148, 145, 115, 124, 142, 136, 128],
   },
   {
     id: "progress",
     label: "In-progress",
     color: "#00c3d2",
-    values: [180, 168, 118, 135, 165, 114, 110, 80, 66, 68, 98, 138],
+    values: [80, 66, 68, 98, 138, 180, 168, 118, 135, 165, 114, 110],
   },
   {
     id: "win90",
     label: "90% win",
     color: "#ff4aa2",
-    values: [148, 141, 141, 170, 180, 112, 96, 42, 36, 53, 55, 74],
+    values: [42, 36, 53, 55, 74, 148, 141, 141, 170, 180, 112, 96],
   },
   {
     id: "win60",
     label: "60% win",
     color: "#ffae4c",
-    values: [171, 120, 103, 140, 155, 152, 112, 106, 72, 88, 97, 122],
+    values: [106, 72, 88, 97, 122, 171, 120, 103, 140, 155, 152, 112],
   },
   {
     id: "potential",
     label: "Potential",
     color: "#f45100",
-    values: [139, 136, 118, 145, 178, 150, 102, 91, 59, 67, 69, 98],
+    values: [91, 59, 67, 69, 98, 139, 136, 118, 145, 178, 150, 102],
   },
 ]
 
 const RANGE_OPTIONS = ["1M", "3M", "6M", "1Y", "1.5Y", "2Y", "All"] as const
 type RangeOption = (typeof RANGE_OPTIONS)[number]
-const DASHBOARD_DENSITY = 1.1667
-const scale = (value: number) => value * DASHBOARD_DENSITY
-const PLOT = { left: scale(40), top: scale(6.5), width: scale(1096), height: scale(363) }
-const SVG_HEIGHT = scale(397)
-const SVG_WIDTH = scale(1136)
-const Y_STEP = PLOT.height / (Y_TICKS.length - 1)
+const PLOT = { left: 40, top: 6.5, width: 1096, height: 363 }
+const SVG_WIDTH = PLOT.left + PLOT.width
+const SVG_HEIGHT = 397
 const MAX_Y = 220
 
 function xAt(index: number) {
@@ -58,6 +57,39 @@ function yAt(value: number) {
 
 function pointsFor(values: number[]) {
   return values.map((value, index) => [xAt(index), yAt(value)] as const)
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function cubicAt(a: number, b: number, c: number, d: number, t: number) {
+  const inverse = 1 - t
+  return inverse ** 3 * a + 3 * inverse ** 2 * t * b + 3 * inverse * t ** 2 * c + t ** 3 * d
+}
+
+function pointOnSmoothPath(points: readonly (readonly [number, number])[], x: number) {
+  const clampedX = clamp(x, PLOT.left, PLOT.left + PLOT.width)
+  const segmentProgress = ((clampedX - PLOT.left) / PLOT.width) * (points.length - 1)
+  const segmentIndex = clamp(Math.floor(segmentProgress), 0, points.length - 2)
+  const start = points[segmentIndex]
+  const end = points[segmentIndex + 1]
+  const beforeStart = points[segmentIndex - 1] ?? start
+  const afterEnd = points[segmentIndex + 2] ?? end
+  const cp1 = [start[0] + (end[0] - beforeStart[0]) / 6, start[1] + (end[1] - beforeStart[1]) / 6] as const
+  const cp2 = [end[0] - (afterEnd[0] - start[0]) / 6, end[1] - (afterEnd[1] - start[1]) / 6] as const
+
+  let low = 0
+  let high = 1
+  for (let i = 0; i < 12; i += 1) {
+    const middle = (low + high) / 2
+    const middleX = cubicAt(start[0], cp1[0], cp2[0], end[0], middle)
+    if (middleX < clampedX) low = middle
+    else high = middle
+  }
+
+  const t = (low + high) / 2
+  return [clampedX, cubicAt(start[1], cp1[1], cp2[1], end[1], t)] as const
 }
 
 function smoothPath(points: readonly (readonly [number, number])[]) {
@@ -87,106 +119,28 @@ function areaPath(values: number[]) {
   } Z`
 }
 
-function SegmentedControl({
-  selectedRange,
-  onRangeChange,
-}: {
-  selectedRange: RangeOption
-  onRangeChange: (range: RangeOption) => void
-}) {
-  const rootRef = useRef<HTMLDivElement>(null)
-  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null)
-
-  useLayoutEffect(() => {
-    const root = rootRef.current
-    const activeButton = buttonRefs.current[RANGE_OPTIONS.indexOf(selectedRange)]
-
-    if (!root || !activeButton) return
-
-    const updateIndicator = () => {
-      const rootRect = root.getBoundingClientRect()
-      const buttonRect = activeButton.getBoundingClientRect()
-
-      setIndicator({
-        left: buttonRect.left - rootRect.left,
-        width: buttonRect.width,
-      })
-    }
-
-    updateIndicator()
-
-    const resizeObserver = new ResizeObserver(updateIndicator)
-    resizeObserver.observe(root)
-    resizeObserver.observe(activeButton)
-
-    return () => resizeObserver.disconnect()
-  }, [selectedRange])
-
-  return (
-    <div
-      ref={rootRef}
-      className="relative flex h-[1.625rem] w-[17.0625rem] items-center gap-[0.125rem] rounded-[0.375rem] border-[0.5px] border-black/10 bg-[#f5f5f5] p-[0.125rem]"
-      role="group"
-      aria-label="Forecast range"
-    >
-      {indicator && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-0 h-[1.375rem] rounded-[0.25rem] bg-[#3d3d3d] shadow-[0_1px_2px_rgba(0,0,0,0.12)] will-change-transform motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-[cubic-bezier(0.455,0.03,0.515,0.955)] motion-reduce:transition-none"
-          style={{ width: indicator.width, transform: `translate(${indicator.left}px, -50%)` }}
-        />
-      )}
-      {RANGE_OPTIONS.map((option, index) => (
-        <Fragment key={option}>
-          <button
-            ref={(element) => {
-              buttonRefs.current[index] = element
-            }}
-            type="button"
-            aria-pressed={selectedRange === option}
-            onClick={() => onRangeChange(option)}
-            className={cn(
-              "relative z-10 flex h-[1.375rem] min-w-0 flex-1 basis-0 cursor-pointer items-center justify-center rounded-[0.25rem] px-0 text-xs leading-[0.875rem] font-normal outline-none motion-safe:transition-colors motion-safe:duration-150 motion-safe:ease-in-out motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-black/25",
-              selectedRange === option ? "text-white" : "text-[#525252]",
-            )}
-          >
-            {option}
-          </button>
-          {index < RANGE_OPTIONS.length - 1 && <span className="relative z-10 h-4 w-0 shrink-0 border-l border-black/10" />}
-        </Fragment>
-      ))}
-    </div>
-  )
-}
-
-function LegendSwatch({ color, dashed = false }: { color: string; dashed?: boolean }) {
-  if (dashed) {
-    return (
-      <span
-        className="h-px w-2.5 shrink-0 border-t"
-        style={{ borderColor: color, borderTopStyle: "dashed" }}
-      />
-    )
-  }
-
-  return <span className="size-2.5 shrink-0 rounded-[0.1875rem]" style={{ background: color }} />
-}
-
 export interface DashboardForecastChartProps {
   className?: string
 }
 
 export function DashboardForecastChart({ className }: DashboardForecastChartProps) {
   const [selectedRange, setSelectedRange] = useState<RangeOption>("1M")
-  const weekX = xAt(5.5)
-  const weekLeft = `${(weekX / SVG_WIDTH) * 100}%`
+  const [hoverX, setHoverX] = useState<number | null>(null)
+
+  function handleChartPointerMove(event: PointerEvent<SVGRectElement>) {
+    const svg = event.currentTarget.ownerSVGElement
+    if (!svg) return
+
+    const rect = svg.getBoundingClientRect()
+    const pointerX = ((event.clientX - rect.left) / rect.width) * SVG_WIDTH
+    setHoverX(clamp(pointerX, PLOT.left, PLOT.left + PLOT.width))
+  }
 
   return (
     <section
       data-node-id="forecast-worker-need-chart"
       className={cn(
-        "flex h-[35.625rem] w-full flex-col overflow-hidden rounded-[0.375rem] border-[0.5px] border-black/10 bg-white",
+        "flex h-[570px] w-full flex-col overflow-hidden rounded-[6px] border-[0.5px] border-black/10 bg-white",
         "shadow-[0_2px_6px_-4px_rgba(0,0,0,0.05),0_1px_3px_-2px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)]",
         className,
       )}
@@ -198,54 +152,49 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
           className="flex items-center gap-0.5 text-xs leading-4 font-normal text-[#525252] underline underline-offset-2"
         >
           Open Forecast Graph
-          <ChevronRight size={16} className="text-[#525252]" />
+          <ChevronRight size={14} className="text-[#525252]" />
         </a>
       </header>
 
-      <div className="flex h-[32.875rem] flex-col gap-8 p-3">
-        <div className="flex h-[1.625rem] items-center justify-between">
+      <div className="flex h-[526px] flex-col gap-8 p-3">
+        <div className="flex h-[26px] items-center justify-between">
           <div className="flex items-center gap-2">
-            <SegmentedControl selectedRange={selectedRange} onRangeChange={setSelectedRange} />
+            <SegmentedButton
+              fill
+              size="small"
+              className="w-[273px]"
+              value={selectedRange}
+              onChange={(v) => setSelectedRange(v as RangeOption)}
+              options={RANGE_OPTIONS.map((o) => ({ value: o, label: o }))}
+            />
             <button
               type="button"
-              className="flex h-[1.625rem] items-center justify-center gap-1 rounded-[0.375rem] border-[0.5px] border-black/10 bg-white px-2.5 py-1 text-xs leading-[0.875rem] font-normal text-black shadow-[0_1px_2px_-1px_rgba(0,0,0,0.1)]"
+              className="flex h-[26px] items-center justify-center gap-1 rounded-[6px] border-[0.5px] border-black/10 bg-white px-2.5 py-1 text-xs leading-[14px] font-normal text-black shadow-[0_1px_2px_-1px_rgba(0,0,0,0.1)]"
             >
               All graph
-              <ChevronDown size={14} className="text-black" />
+              <ChevronDown size={12} className="text-black" />
             </button>
           </div>
         </div>
 
-        <div className="flex h-[27.75rem] flex-col items-center gap-6 pb-2">
-          <div className="relative h-[24.8125rem] w-full">
+        <div className="flex h-[444px] flex-col items-center gap-6 pb-2">
+          <div className="relative h-[397px] w-full">
             <div className="pointer-events-none absolute inset-0 z-10">
               {Y_TICKS.map((tick, index) => (
                 <span
                   key={tick}
-                  className="absolute left-0 w-8 text-left text-[0.6875rem] leading-[0.8125rem] font-normal text-[#525252]"
-                  style={{ top: `${PLOT.top + index * Y_STEP - scale(6)}px` }}
+                  className="absolute left-0 w-8 text-left text-[11px] leading-[13px] font-normal text-[#525252]"
+                  style={{ top: `${PLOT.top + index * 33 - 6}px` }}
                 >
                   {tick}
                 </span>
               ))}
 
-              <span
-                className="absolute -top-[0.9375rem] -translate-x-1/2 text-center text-[0.6875rem] leading-[0.9375rem] font-normal whitespace-nowrap text-[#525252]"
-                style={{ left: weekLeft }}
-              >
-                This week
-              </span>
-              <span
-                className="absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#f1f1f1] bg-[#352e29]"
-                style={{ left: weekLeft, top: PLOT.top }}
-                aria-hidden
-              />
-
               <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between">
                 {MONTHS.map((month) => (
                   <span
                     key={month}
-                    className="w-20 text-center text-[0.6875rem] leading-[0.8125rem] font-normal text-[#525252]"
+                    className="w-20 text-center text-[11px] leading-[13px] font-normal text-[#525252]"
                   >
                     {month}
                   </span>
@@ -256,7 +205,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
               viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
               className="absolute inset-0 h-full w-full overflow-visible"
               role="img"
-              aria-label="Forecast worker need line chart from January to December"
+              aria-label="Forecast worker need line chart from August to July"
               preserveAspectRatio="none"
             >
               <defs>
@@ -273,8 +222,8 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                   <line
                     x1={PLOT.left}
                     x2={PLOT.left + PLOT.width}
-                    y1={PLOT.top + index * Y_STEP}
-                    y2={PLOT.top + index * Y_STEP}
+                    y1={PLOT.top + index * 33}
+                    y2={PLOT.top + index * 33}
                     stroke="#f5f5f5"
                     strokeWidth="1"
                     vectorEffect="non-scaling-stroke"
@@ -325,36 +274,65 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                 />
               ))}
 
-              <line
-                x1={weekX}
-                x2={weekX}
-                y1={PLOT.top}
-                y2={PLOT.top + PLOT.height}
-                stroke="#352e29"
-                strokeWidth="1.4"
-                vectorEffect="non-scaling-stroke"
+              {hoverX != null && (
+                <rect
+                  x={hoverX}
+                  y={PLOT.top}
+                  width={PLOT.left + PLOT.width - hoverX}
+                  height={PLOT.height}
+                  fill="white"
+                  opacity="0.62"
+                  pointerEvents="none"
+                />
+              )}
+
+              <rect
+                x={PLOT.left}
+                y={PLOT.top}
+                width={PLOT.width}
+                height={PLOT.height}
+                fill="transparent"
+                pointerEvents="all"
+                style={{ cursor: "crosshair" }}
+                onPointerMove={handleChartPointerMove}
+                onPointerLeave={() => setHoverX(null)}
               />
             </svg>
+            {hoverX != null && (
+              <div className="pointer-events-none absolute inset-0 z-20">
+                <span
+                  className="absolute w-px bg-[#352e29]/55"
+                  style={{
+                    left: `${(hoverX / SVG_WIDTH) * 100}%`,
+                    top: `${(PLOT.top / SVG_HEIGHT) * 100}%`,
+                    height: `${(PLOT.height / SVG_HEIGHT) * 100}%`,
+                    transform: "translateX(-0.5px)",
+                  }}
+                />
+                {SERIES.map((series) => {
+                  const [markerX, markerY] = pointOnSmoothPath(pointsFor(series.values), hoverX)
+                  return (
+                    <span
+                      key={`${series.id}-hover-marker`}
+                      className="absolute size-[6px] rounded-full border border-white"
+                      style={{
+                        backgroundColor: series.color,
+                        left: `calc(${(markerX / SVG_WIDTH) * 100}% - 3px)`,
+                        top: `calc(${(markerY / SVG_HEIGHT) * 100}% - 3px)`,
+                      }}
+                    />
+                  )
+                })}
+              </div>
+            )}
           </div>
 
-          <div
-            aria-label="Forecast chart legend"
-            className="flex h-[0.9375rem] items-center justify-center gap-5 text-[0.6875rem] leading-[0.9375rem] font-normal text-[#525252]"
-          >
+          <div aria-label="Forecast chart legend" className="flex h-[15px] items-center justify-center gap-5">
             {SERIES.map((series) => (
-              <div key={series.id} className="flex items-center gap-1 whitespace-nowrap">
-                <LegendSwatch color={series.color} />
-                <span>{series.label}</span>
-              </div>
+              <Legend key={series.id} variant="square" color={series.color} label={series.label} />
             ))}
-            <div className="flex items-center gap-1 whitespace-nowrap">
-              <LegendSwatch color="#e51d31" dashed />
-              <span>Total workforce</span>
-            </div>
-            <div className="flex items-center gap-1 whitespace-nowrap">
-              <LegendSwatch color="#129457" dashed />
-              <span>Carlton workforce</span>
-            </div>
+            <Legend variant="line" color="#e51d31" label="Total workforce" />
+            <Legend variant="line" color="#129457" label="Carlton workforce" />
           </div>
         </div>
       </div>

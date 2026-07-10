@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
  * until a purple ramp exists).
  */
 const badge = cva(
-  "inline-flex items-center gap-1 whitespace-nowrap rounded-[0.25rem] border-[0.5px] border-solid font-medium leading-[1.3]",
+  "inline-flex items-center gap-1 whitespace-nowrap rounded-[4px] border-[0.5px] border-solid font-medium leading-[1.3]",
   {
     variants: {
       variant: {
@@ -24,7 +24,7 @@ const badge = cva(
         purple: "border-[#BC97F7] bg-[#F7F1FF] text-[#7635D9]",
       },
       size: {
-        sm: "px-1.5 py-1 text-[0.625rem]",
+        sm: "px-1.5 py-1 text-[10px]",
         md: "px-2 py-1 text-xs",
       },
     },

@@ -1,7 +1,10 @@
 import { AppShell } from "@/components/app-shell"
 import { DashboardForecastChart } from "@/components/dashboard-forecast-chart"
 import { DashboardFrame } from "@/components/dashboard-frame"
+import { DashboardJobsInsights } from "@/components/dashboard-jobs-insights"
 import { DashboardKpiGroup } from "@/components/dashboard-kpis"
+import { DashboardMapBudget } from "@/components/dashboard-map-budget"
+import { DashboardSkillsInsights } from "@/components/dashboard-skills-insights"
 import { Showcase } from "./showcase/Showcase"
 
 export default function App() {
@@ -18,6 +21,9 @@ export default function App() {
           <DashboardKpiGroup />
           {/* the chart is still authored at its own (Figma 12px) scale for now */}
           <DashboardForecastChart />
+          <DashboardJobsInsights />
+          <DashboardMapBudget />
+          <DashboardSkillsInsights />
         </div>
       </DashboardFrame>
     </AppShell>

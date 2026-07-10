@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 export interface TextInputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "size" | "prefix"> {
-  /** md = 12px padding (regular), sm = 8px padding (small) */
+  /** md = 12px padding / 14px text (regular), sm = 8px padding all sides / 12px text (small) */
   size?: "sm" | "md"
   /** error styling (red border) */
   error?: boolean
@@ -44,11 +44,18 @@ export function TextInput({
   className,
   ...props
 }: TextInputProps) {
-  const addonPad = size === "sm" ? "px-3 py-2" : "px-4 py-3"
+  // sm = fixed 32px, 8px horizontal padding, 12px/16px text (content is vertically
+  // centered so the ⌘K badge and icons fit without stretching the field past 32px);
+  // md = 12px padding all round / 14px text, height driven by content.
+  const sizeClass = size === "sm" ? "h-8" : ""
+  const addonPad = size === "sm" ? "px-2" : "px-4 py-3"
+  const fieldPad = size === "sm" ? "px-2" : "p-3"
+  const inputText = size === "sm" ? "text-[12px] leading-[16px]" : "text-sm leading-5"
   return (
     <div
       className={cn(
-        "flex items-stretch overflow-hidden rounded-[0.375rem] border border-solid",
+        "flex items-stretch overflow-hidden rounded-[6px] border border-solid",
+        sizeClass,
         disabled
           ? "border-black/10 bg-[#EBEBEB]"
           : error
@@ -63,12 +70,13 @@ export function TextInput({
         </div>
       )}
 
-      <div className={cn("flex min-w-0 flex-1 items-center gap-2", size === "sm" ? "p-2" : "p-3", fieldClassName)}>
+      <div className={cn("flex min-w-0 flex-1 items-center gap-2", fieldPad, fieldClassName)}>
         {leading != null && <span className="flex shrink-0 items-center text-[#525252]">{leading}</span>}
         <input
           disabled={disabled}
           className={cn(
-            "min-w-0 flex-1 bg-transparent text-sm leading-5 text-black outline-none placeholder:text-[#525252]",
+            "min-w-0 flex-1 bg-transparent text-black outline-none placeholder:text-[#525252]",
+            inputText,
             disabled && "text-[#8F8F8F] placeholder:text-[#8F8F8F]",
             className,
           )}
