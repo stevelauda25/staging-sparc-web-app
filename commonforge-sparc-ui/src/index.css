@@ -1,0 +1,214 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+@import "tailwindcss";
+
+/* ============================================================
+   Common Forge design tokens.
+   Palette + semantics live in :root as real, always-present CSS
+   variables (single source of truth). @theme inline maps them
+   into Tailwind so utilities generate without re-emitting vars.
+   ============================================================ */
+:root {
+  /* neutral (warm) */
+  --neutral-25: #FBFAF9;
+  --neutral-50: #F6F4F1;
+  --neutral-100: #EFEBE6;
+  --neutral-200: #E2DCD4;
+  --neutral-300: #CFC7BC;
+  --neutral-400: #B0A699;
+  --neutral-500: #8B8175;
+  --neutral-600: #6B6259;
+  --neutral-700: #4E4640;
+  --neutral-800: #352E29;
+  --neutral-900: #26201C;
+  --neutral-950: #201B18;
+
+  /* crimson (brand) */
+  --crimson-25: #FFF5F4;
+  --crimson-50: #FFE3E1;
+  --crimson-100: #FED0CD;
+  --crimson-200: #FCA29C;
+  --crimson-300: #F9766C;
+  --crimson-400: #F5493D;
+  --crimson-500: #C0180C;
+  --crimson-600: #98150B;
+  --crimson-700: #721009;
+  --crimson-800: #5E0E08;
+  --crimson-900: #4A0C07;
+  --crimson-950: #370906;
+
+  /* green (success) */
+  --green-25: #ECFDF3;
+  --green-50: #D2F8E0;
+  --green-100: #A8EFC6;
+  --green-200: #72E0A6;
+  --green-300: #41CB85;
+  --green-400: #1FB06B;
+  --green-500: #129457;
+  --green-600: #0E7847;
+  --green-700: #0C5E39;
+  --green-800: #0A4A2D;
+  --green-900: #083A24;
+  --green-950: #052718;
+
+  /* amber (warning) */
+  --amber-25: #FFF8E6;
+  --amber-50: #FDECBE;
+  --amber-100: #FAD884;
+  --amber-200: #F5C24A;
+  --amber-300: #EFAD20;
+  --amber-400: #E59C0E;
+  --amber-500: #D18B0C;
+  --amber-600: #AE720A;
+  --amber-700: #8B5B08;
+  --amber-800: #6F4906;
+  --amber-900: #593B05;
+  --amber-950: #3E2904;
+
+  /* red (error, distinct from crimson) */
+  --red-25: #FFF0F1;
+  --red-50: #FFDADD;
+  --red-100: #FFB8BE;
+  --red-200: #FB8A93;
+  --red-300: #F65B68;
+  --red-400: #F13546;
+  --red-500: #E51D31;
+  --red-600: #C2152A;
+  --red-700: #9C1122;
+  --red-800: #7C0D1B;
+  --red-900: #630B16;
+  --red-950: #44060E;
+
+  /* semantic (theme later = swap this layer only) */
+  --background: #FBFAF9;
+  --surface: #FFFFFF;
+  --surface-sunken: #F6F4F1;
+  --foreground: #201B18;
+  --muted-foreground: #6B6259;
+  --subtle-foreground: #8B8175;
+  --border-hairline: #E2DCD4;
+  --border-strong: #CFC7BC;
+  --primary: #C0180C;
+  --primary-hover: #98150B;
+  --primary-foreground: #FFFFFF;
+  --danger: #E51D31;
+  --danger-foreground: #9C1122;
+}
+
+@theme inline {
+  --font-sans: "Geist", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  --color-neutral-25: var(--neutral-25);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+  --color-neutral-950: var(--neutral-950);
+
+  --color-crimson-25: var(--crimson-25);
+  --color-crimson-50: var(--crimson-50);
+  --color-crimson-100: var(--crimson-100);
+  --color-crimson-200: var(--crimson-200);
+  --color-crimson-300: var(--crimson-300);
+  --color-crimson-400: var(--crimson-400);
+  --color-crimson-500: var(--crimson-500);
+  --color-crimson-600: var(--crimson-600);
+  --color-crimson-700: var(--crimson-700);
+  --color-crimson-800: var(--crimson-800);
+  --color-crimson-900: var(--crimson-900);
+  --color-crimson-950: var(--crimson-950);
+
+  --color-green-25: var(--green-25);
+  --color-green-50: var(--green-50);
+  --color-green-100: var(--green-100);
+  --color-green-200: var(--green-200);
+  --color-green-300: var(--green-300);
+  --color-green-400: var(--green-400);
+  --color-green-500: var(--green-500);
+  --color-green-600: var(--green-600);
+  --color-green-700: var(--green-700);
+  --color-green-800: var(--green-800);
+  --color-green-900: var(--green-900);
+  --color-green-950: var(--green-950);
+
+  --color-amber-25: var(--amber-25);
+  --color-amber-50: var(--amber-50);
+  --color-amber-100: var(--amber-100);
+  --color-amber-200: var(--amber-200);
+  --color-amber-300: var(--amber-300);
+  --color-amber-400: var(--amber-400);
+  --color-amber-500: var(--amber-500);
+  --color-amber-600: var(--amber-600);
+  --color-amber-700: var(--amber-700);
+  --color-amber-800: var(--amber-800);
+  --color-amber-900: var(--amber-900);
+  --color-amber-950: var(--amber-950);
+
+  --color-red-25: var(--red-25);
+  --color-red-50: var(--red-50);
+  --color-red-100: var(--red-100);
+  --color-red-200: var(--red-200);
+  --color-red-300: var(--red-300);
+  --color-red-400: var(--red-400);
+  --color-red-500: var(--red-500);
+  --color-red-600: var(--red-600);
+  --color-red-700: var(--red-700);
+  --color-red-800: var(--red-800);
+  --color-red-900: var(--red-900);
+  --color-red-950: var(--red-950);
+
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-border: var(--border-hairline);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --shadow-elev-1: 0 1px 2px rgba(32,27,24,.05), 0 4px 10px rgba(32,27,24,.04);
+  --shadow-elev-2: 0 1px 2px rgba(32,27,24,.05), 0 5px 14px rgba(32,27,24,.05);
+  --shadow-pop: 0 1px 2px rgba(32,27,24,.06), 0 12px 30px rgba(32,27,24,.16);
+}
+
+html {
+  /* THE ONE KNOB. The base size the whole UI scales from. Everything is
+     authored in rem, so raising this enlarges the entire app uniformly. The
+     current value is 16px * 1.1667. It is fixed, never tied to the viewport, so
+     resizing the window never rescales anything. Explicit px borders, dividers,
+     and chart strokes stay unscaled. */
+  font-size: 18.667px;
+}
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scroll without a visible scrollbar. */
+@utility scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+}
