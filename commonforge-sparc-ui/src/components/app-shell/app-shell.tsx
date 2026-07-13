@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { LayoutLeft } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { Sidebar } from "@/components/sidebar"
@@ -17,29 +17,23 @@ export interface AppShellProps {
  * the content fills the width, and hovering the left edge peeks the full rail
  * back in as a floating overlay (Attio-style).
  *
- * The collapse toggle is a genuine child of the rail (account-switcher) when
- * shown and of the content header when collapsed, so it scrolls with whichever
- * owns it. A viewport-anchored clone below carries the smooth slide for the
- * ~200ms transition; the real toggles hide themselves while it runs.
+ * The collapse toggle is ONE persistent element, viewport-anchored, that simply
+ * slides between the account-switcher spot (12.5rem) and the content-header spot
+ * (0.875rem). The account-switcher and header reserve its footprint with an
+ * invisible spacer (SidebarToggle), so the icon only ever moves. It never fades
+ * in or out and never doubles up.
  */
 export function AppShell({ children, className }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [peeked, setPeeked] = useState(false)
-  const [sliding, setSliding] = useState(false)
-  const slideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const toggle = () => {
     setCollapsed((value) => !value)
     setPeeked(false)
-    setSliding(true)
-    clearTimeout(slideTimer.current)
-    slideTimer.current = setTimeout(() => setSliding(false), 220)
   }
 
-  useEffect(() => () => clearTimeout(slideTimer.current), [])
-
   return (
-    <ShellProvider value={{ collapsed, toggle, sliding }}>
+    <ShellProvider value={{ collapsed, toggle }}>
       <div
         className={cn(
           "relative grid h-screen w-full grid-rows-[minmax(0,1fr)] overflow-hidden bg-surface motion-safe:transition-[grid-template-columns] motion-safe:duration-200 motion-safe:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
@@ -63,20 +57,22 @@ export function AppShell({ children, className }: AppShellProps) {
           {children}
         </main>
 
-        {/* overlay clone: purely visual, viewport-anchored. It is invisible except
-            during the ~200ms slide, where it carries the toggle smoothly between
-            the account-switcher spot (12.5rem) and the header spot (0.875rem). The
-            real toggles (which scroll with their container) hide while it runs. */}
-        <span
-          aria-hidden="true"
+        {/* the one collapse toggle. Viewport-anchored so it is always painted; it
+            only slides its `left` between the header spot (0.875rem, collapsed)
+            and the account-switcher spot (12.5rem, shown). z-[60] keeps it above
+            the rail (z-50) so it stays clickable through the peek overlay. */}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "pointer-events-none absolute top-[14px] z-40 flex size-7 items-center justify-center rounded-md text-secondary motion-safe:transition-[left] motion-safe:duration-200 motion-safe:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
-            sliding ? "opacity-100" : "opacity-0",
+            "absolute top-[14px] z-[60] flex size-7 items-center justify-center rounded-md text-secondary outline-none hover:bg-[#F5F5F5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] motion-safe:transition-[left] motion-safe:duration-200 motion-safe:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
             collapsed && !peeked ? "left-3.5" : "left-[12.5rem]",
           )}
         >
           <LayoutLeft className="size-4" />
-        </span>
+        </button>
 
         {/* collapsed: a thin hover zone on the left edge peeks the rail out */}
         {collapsed && (

@@ -78,12 +78,12 @@ export function ProgressBar({
       <div className={cn("w-full", className)} {...props}>
         <div
           className={cn(
-            "mb-0.5 flex items-center justify-between gap-3 text-xs leading-4 text-muted-foreground",
+            "mb-0.5 flex items-center justify-between gap-3 text-xs leading-4 text-secondary",
             labelRowClassName,
           )}
         >
           <span className={cn("min-w-0 truncate", labelClassName)}>{label}</span>
-          <span className={cn("shrink-0 text-foreground", valueClassName)}>{valueFormatter(value, max)}</span>
+          <span className={cn("shrink-0 text-secondary", valueClassName)}>{valueFormatter(value, max)}</span>
         </div>
         <ProgressBarBase
           aria-label={label}

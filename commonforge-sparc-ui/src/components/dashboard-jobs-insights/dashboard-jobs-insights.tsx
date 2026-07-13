@@ -303,7 +303,7 @@ function ProjectedRow({ job }: { job: (typeof PROJECTED_JOBS)[number] }) {
         <span
           className={cn(
             "text-xs leading-4 font-normal",
-            isPositive ? "text-[#1a9f64]" : "text-[#e51d31]",
+            isPositive ? "text-[#129457]" : "text-[#e51d31]",
           )}
         >
           {formatDelta(delta)}

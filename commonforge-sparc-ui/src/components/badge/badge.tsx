@@ -19,7 +19,7 @@ const badge = cva(
         success: "border-green-200 bg-green-25 text-green-500",
         error: "border-red-200 bg-red-25 text-red-500",
         warning: "border-amber-200 bg-amber-25 text-amber-500",
-        neutral: "border-neutral-200 bg-neutral-100 text-neutral-600",
+        neutral: "border-neutral-200 bg-neutral-100 text-[#525252]",
         outline: "border-neutral-300 bg-surface text-primary",
         purple: "border-[#BC97F7] bg-[#F7F1FF] text-[#7635D9]",
       },

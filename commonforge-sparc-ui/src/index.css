@@ -83,6 +83,7 @@
   --surface: #FFFFFF;
   --surface-sunken: #F6F4F1;
   --foreground: #201B18;
+  --secondary: #525252;
   --muted-foreground: #6B6259;
   --subtle-foreground: #8B8175;
   --border-hairline: #E2DCD4;
@@ -167,6 +168,7 @@
   --color-surface: var(--surface);
   --color-surface-sunken: var(--surface-sunken);
   --color-foreground: var(--foreground);
+  --color-secondary: var(--secondary);
   --color-muted-foreground: var(--muted-foreground);
   --color-subtle-foreground: var(--subtle-foreground);
   --color-border: var(--border-hairline);
