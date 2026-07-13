@@ -19,8 +19,8 @@ function LabelAddon() {
   return (
     <>
       <span className="size-5 shrink-0 rounded-[2px] bg-[#F5F5F5]" />
-      <span className="text-sm leading-5 text-black">Label</span>
-      <ChevronDown size={14} className="text-[#525252]" />
+      <span className="text-sm leading-5 text-primary">Label</span>
+      <ChevronDown size={14} className="text-secondary" />
     </>
   )
 }
@@ -37,7 +37,7 @@ export function TextInputShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">text-input</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         The raw input. Fill #F5F5F5, 1px black/10 border, black focus border with a 3px ring, red
         error border, gray-100 disabled. Sizes sm/md, leading/trailing icons, and prefix/suffix
         addons. Click into a field to see focus.
@@ -79,7 +79,7 @@ export function SearchFieldShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">search-field</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         A text-input with a search icon and a results dropdown (list-base rows on a white panel with
         a layered shadow). States come from text-input.
       </p>

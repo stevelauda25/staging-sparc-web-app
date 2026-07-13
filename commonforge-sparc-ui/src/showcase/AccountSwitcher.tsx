@@ -17,7 +17,7 @@ export function AccountSwitcherShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">account-switcher</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         The profile trigger for the top of the rail: avatar + name + chevron. Built on the avatar
         atom. Initials fallback shown, pass a photo via <code>avatarSrc</code>.
       </p>

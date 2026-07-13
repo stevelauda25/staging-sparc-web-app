@@ -7,7 +7,7 @@ export function KpiCardShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">kpi-card</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         A KPI tile. Default size (label + optional icon, value with an optional trend or unit, plus a
         description) and a compact size (leading icon, label + value, no description). Trend is a green
         up or red down triangle; a unit like /hr renders as a muted suffix. Text sizes reuse the

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { Breadcrumb, type BreadcrumbItem } from "@/components/breadcrumb"
+import { useShell, SidebarToggle } from "@/components/app-shell"
 
 export interface DashboardFrameProps {
   /** breadcrumb trail; the last item is the current page */
@@ -21,27 +22,34 @@ export function DashboardFrame({
   children,
   className,
 }: DashboardFrameProps) {
+  const { collapsed } = useShell()
   return (
     <section
       data-node-id="2533:3618"
-      className={cn("flex min-h-[2345px] w-full items-start bg-background p-2", className)}
+      className={cn("flex h-full min-h-0 w-full items-start bg-background p-2", className)}
     >
       <div
         data-node-id="2533:3619"
         className={cn(
-          "relative flex min-h-[2329px] min-w-0 flex-1 flex-col overflow-hidden rounded-md bg-surface ring-[0.5px] ring-black/10",
+          "relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md bg-surface ring-[0.5px] ring-black/10",
           "shadow-[0_1px_2px_-1px_rgba(0,0,0,0.2),0_2px_4px_-2px_rgba(0,0,0,0.15),0_4px_6px_-4px_rgba(0,0,0,0.1)]",
           "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[inset_0_0.5px_0.5px_0_rgba(255,255,255,0.1),inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.1)]",
         )}
       >
         <header
           data-node-id="2533:3620"
-          className="relative z-10 flex h-9 shrink-0 items-center px-3 shadow-[inset_0_-0.5px_0_rgba(0,0,0,0.1)]"
+          className={cn(
+            "relative z-30 flex h-10 shrink-0 items-center gap-1 rounded-t-md bg-surface pr-3 shadow-[inset_0_-0.5px_0_rgba(0,0,0,0.1)] motion-safe:transition-[padding] motion-safe:duration-200 motion-safe:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
+            collapsed ? "pl-1.5" : "pl-3",
+          )}
         >
+          {/* when collapsed the expand toggle lives here as a real header child, so
+              it scrolls with the header rather than floating pinned over it */}
+          {collapsed && <SidebarToggle />}
           {/* breadcrumb trail, Figma node 2533:3621 */}
           <Breadcrumb items={breadcrumb} />
         </header>
-        <div data-node-id="2533:3622" className="relative z-10 min-h-[2293px] w-full">
+        <div data-node-id="2533:3622" className="scrollbar-hide relative z-10 min-h-0 w-full flex-1 overflow-auto overscroll-none">
           {children}
         </div>
       </div>

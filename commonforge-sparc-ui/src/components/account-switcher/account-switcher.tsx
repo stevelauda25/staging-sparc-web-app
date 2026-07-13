@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { ChevronDown, LayoutLeft } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { Avatar } from "@/components/avatar"
@@ -14,7 +15,9 @@ export interface AccountSwitcherProps {
   role?: string
   /** profile menu trigger */
   onClick?: () => void
-  /** collapse-sidebar toggle (the panel icon) */
+  /** control rendered at the right edge (e.g. the shell's collapse toggle) */
+  toggle?: ReactNode
+  /** collapse-sidebar toggle (the panel icon); fallback when `toggle` is unset */
   onToggleSidebar?: () => void
   className?: string
 }
@@ -36,11 +39,12 @@ export function AccountSwitcher({
   initials,
   role,
   onClick,
+  toggle,
   onToggleSidebar,
   className,
 }: AccountSwitcherProps) {
   return (
-    <div className={cn("flex w-full items-center gap-2 rounded-sm py-2 pl-1 pr-1", className)}>
+    <div className={cn("flex h-10 w-full items-center gap-2 rounded-sm pl-1 pr-0.5", className)}>
       <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
         <button
           type="button"
@@ -51,8 +55,8 @@ export function AccountSwitcher({
           className="-ml-1 flex min-w-0 items-center gap-1 rounded-sm px-1 py-0.5 outline-none hover:bg-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#CFC7BC]"
         >
           <Avatar src={avatarSrc} fallback={initials} alt={name} size={20} />
-          <span className="truncate text-sm leading-5 text-black">{name}</span>
-          <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
+          <span className="truncate text-sm leading-5 text-primary">{name}</span>
+          <ChevronDown className="size-3 shrink-0 text-secondary" />
         </button>
         {role && (
           // purple role badge; keep the compact profile padding
@@ -61,14 +65,17 @@ export function AccountSwitcher({
           </Badge>
         )}
       </div>
-      <button
-        type="button"
-        onClick={onToggleSidebar}
-        aria-label="Collapse sidebar"
-        className="flex shrink-0 items-center justify-center rounded-sm p-1 text-muted-foreground outline-none hover:bg-[#F5F5F5] hover:text-foreground focus-visible:ring-2 focus-visible:ring-[#CFC7BC]"
-      >
-        <LayoutLeft className="size-4" />
-      </button>
+      {toggle ??
+        (onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            aria-label="Toggle sidebar"
+            className="flex shrink-0 items-center justify-center rounded-sm p-1 text-secondary outline-none hover:bg-[#F5F5F5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC]"
+          >
+            <LayoutLeft className="size-4" />
+          </button>
+        ))}
     </div>
   )
 }

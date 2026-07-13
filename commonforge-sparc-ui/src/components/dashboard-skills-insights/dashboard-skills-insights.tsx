@@ -2,6 +2,7 @@ import { ChevronRight } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { KpiCard } from "@/components/kpi-card"
 import { Legend } from "@/components/legend"
+import { ProgressValueBar } from "@/components/progress-value-bar"
 
 // the shared card shadow (shadow-003)
 const CARD_SHADOW =
@@ -44,20 +45,15 @@ function SkillBar({ name, value }: Skill) {
   const level = LEVELS[Math.min(4, Math.max(0, Math.floor(value)))]
   const pct = (value / 5) * 100
   return (
-    <div className="flex items-stretch rounded-[6px] border-[0.5px] border-black/10 bg-black/5">
-      <div
-        className={cn(
-          "flex items-center overflow-hidden rounded-[6px] px-2 py-1 text-[12px] leading-4 whitespace-nowrap",
-          level.onDark ? "text-white" : "text-black",
-        )}
-        style={{ width: `${pct}%`, background: level.color }}
-      >
-        {name}
-      </div>
-      <div className="flex flex-1 items-center justify-end px-2 py-1 text-[12px] leading-4 text-black">
-        {value.toFixed(1)}
-      </div>
-    </div>
+    <ProgressValueBar
+      label={name}
+      valueLabel={value.toFixed(1)}
+      percent={pct}
+      color={level.color}
+      fillTextClassName={level.onDark ? "text-white" : "text-primary"}
+      trackTextClassName="text-primary"
+      valueClassName="text-primary"
+    />
   )
 }
 
@@ -66,8 +62,8 @@ function BottomPanel({ title, skills }: { title: string; skills: Skill[] }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4 rounded-[6px] border-[0.5px] border-black/10 bg-white p-3">
       <div className="flex flex-col gap-1">
-        <p className="text-[13px] leading-[18px] font-normal text-black">{title}</p>
-        <p className="text-[12px] leading-4 font-normal text-[#525252]">
+        <p className="text-[13px] leading-[18px] font-normal text-primary">{title}</p>
+        <p className="text-[12px] leading-4 font-normal text-secondary">
           Lowest average ratings, priority for training
         </p>
       </div>
@@ -79,7 +75,7 @@ function BottomPanel({ title, skills }: { title: string; skills: Skill[] }) {
         </div>
         <div className="flex items-center justify-between">
           {[0, 1, 2, 3, 4, 5].map((n) => (
-            <span key={n} className="text-[11px] leading-[15px] font-normal text-[#525252]">
+            <span key={n} className="text-[11px] leading-[15px] font-normal text-secondary">
               {n}
             </span>
           ))}
@@ -111,13 +107,13 @@ export function DashboardSkillsInsights({ className }: DashboardSkillsInsightsPr
       )}
     >
       <header className="flex items-center justify-between gap-2.5 border-b-[0.5px] border-black/10 p-3">
-        <h2 className="text-[14px] leading-5 font-medium text-black">Skills Management</h2>
+        <h2 className="text-[14px] leading-5 font-medium text-primary">Skills Management</h2>
         <a
           href="#skill-dashboard"
-          className="flex items-center gap-0.5 text-[12px] leading-4 font-normal text-[#525252] underline underline-offset-2"
+          className="flex items-center gap-0.5 text-[12px] leading-4 font-normal text-secondary underline underline-offset-2"
         >
           Open Skill Dashboard
-          <ChevronRight size={14} className="text-[#525252]" />
+          <ChevronRight size={14} className="text-secondary" />
         </a>
       </header>
 

@@ -27,7 +27,7 @@ export function NavSectionShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">nav-section</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         A labeled group of nav-items. The caption is a static list-base row (10px, #8F8F8F,
         uppercase). Children are the section's nav-items.
       </p>

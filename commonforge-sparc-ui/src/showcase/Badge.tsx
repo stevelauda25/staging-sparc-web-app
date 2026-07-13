@@ -24,7 +24,7 @@ export function BadgeShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">badge</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         Status and role labels. Fill {"{color}"}-25, border {"{color}"}-200, text and dot{" "}
         {"{color}"}-500. Two sizes, optional dot and leading icon.
       </p>

@@ -16,7 +16,7 @@ export function LegendShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">legend</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         A single legend item: a swatch plus a label. Two swatch variants — <code>square</code> (a
         filled chip) and <code>line</code> (a dashed or solid stroke). Color is fully adjustable via
         the <code>color</code> prop. An optional trailing value + percent supports data legends.

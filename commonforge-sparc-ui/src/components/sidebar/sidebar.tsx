@@ -26,6 +26,9 @@ import { NavSection } from "@/components/nav-section"
 import { Separator } from "@/components/separator"
 import { AccountSwitcher } from "@/components/account-switcher"
 import { SearchField } from "@/components/search-field"
+import { searchProjects } from "@/data/projects"
+// deep import (not the barrel) so the sidebar does not import back through app-shell
+import { useShell, SidebarToggle } from "@/components/app-shell/shell"
 
 interface NavSub {
   id: string
@@ -163,6 +166,8 @@ const FOOTER: { id: string; label: string; icon: IconComponent; danger?: boolean
 export interface SidebarProps {
   /** extra fixed-header content (e.g. the search-field) rendered under the account-switcher */
   header?: ReactNode
+  /** floating-overlay styling (shadow), used when peeked from a collapsed rail */
+  floating?: boolean
   className?: string
 }
 
@@ -175,9 +180,23 @@ export interface SidebarProps {
  * expandable rows are open. Initialised to match the Figma: Dashboard is current
  * and Workforce is expanded.
  */
-export function Sidebar({ header, className }: SidebarProps) {
+export function Sidebar({ header, floating = false, className }: SidebarProps) {
+  const { collapsed } = useShell()
+  // the toggle lives in the rail whenever the rail is on screen: expanded, or
+  // peeked out as a floating overlay. Collapsed-and-hidden, it lives in the header.
+  const showToggle = !collapsed || floating
+
   const [currentId, setCurrentId] = useState("dashboard")
   const [open, setOpen] = useState<Record<string, boolean>>({ workforce: true })
+
+  // global project search: filter the shared project list as the user types
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchResults = searchProjects(searchQuery).map((project) => ({
+    id: project.id,
+    label: project.name,
+    trailing: <span className="text-[11px] leading-[15px] text-secondary">{project.id}</span>,
+  }))
 
   const toggle = (id: string) => setOpen((o) => ({ ...o, [id]: !o[id] }))
 
@@ -199,12 +218,16 @@ export function Sidebar({ header, className }: SidebarProps) {
     updateFade()
     el.addEventListener("scroll", updateFade, { passive: true })
     window.addEventListener("resize", updateFade)
+    const observer = new ResizeObserver(updateFade)
+    observer.observe(el)
+    Array.from(el.children).forEach((child) => observer.observe(child))
     // content height settles a frame later and again once fonts load, recheck
     const raf = requestAnimationFrame(updateFade)
     document.fonts?.ready.then(updateFade).catch(() => {})
     return () => {
       el.removeEventListener("scroll", updateFade)
       window.removeEventListener("resize", updateFade)
+      observer.disconnect()
       cancelAnimationFrame(raf)
     }
   }, [updateFade])
@@ -214,79 +237,96 @@ export function Sidebar({ header, className }: SidebarProps) {
     updateFade()
   }, [open, updateFade])
 
-  const FADE_PX = 28
-  const maskImage =
-    !fade.top && !fade.bottom
-      ? undefined
-      : `linear-gradient(to bottom, ${[
-          fade.top ? "transparent 0" : "black 0",
-          ...(fade.top ? [`black ${FADE_PX}px`] : []),
-          ...(fade.bottom ? [`black calc(100% - ${FADE_PX}px)`] : []),
-          fade.bottom ? "transparent 100%" : "black 100%",
-        ].join(", ")})`
-
   return (
     <aside
       className={cn(
-        // fills the viewport height with plain flexbox: fixed header, scrolling
-        // nav, pinned footer. Width in rem (17rem = 272px) so it tracks the knob.
-        "flex h-full w-[15rem] flex-col bg-background p-2",
+        // fixed header, scrolling nav, pinned footer. Width in rem so it tracks
+        // the root-font-size knob. `floating` styles it as an overlay panel.
+        "flex h-full min-h-0 w-[15rem] flex-col bg-background p-2",
+        floating && "border-r-[0.5px] border-black/10 shadow-[6px_0_24px_-6px_rgba(32,27,24,0.18)]",
         className,
       )}
     >
       {/* fixed header: account-switcher + compact search */}
       <div className="shrink-0">
-        <AccountSwitcher name="Jason Heim" initials="JH" role="Admin" />
+        {/* the collapse toggle is a real child here while the rail is shown, so it
+            scrolls/pins with the account-switcher (a clone carries the slide) */}
+        <AccountSwitcher
+          name="Jason Heim"
+          initials="JH"
+          role="Admin"
+          toggle={showToggle ? <SidebarToggle /> : undefined}
+        />
         <div className="mt-3">
           {/* small search-field, tuned to the sidebar's compact 26px density */}
           <SearchField
             size="sm"
             shortcut="⌘K"
             placeholder="Search projects"
-            fieldClassName="py-1 pl-2 pr-1"
-            containerClassName="h-[26px] border-[0.6px] shadow-[0_0.5px_2px_rgba(0,0,0,0.05)]"
+            fieldClassName="py-1 pl-2 !pr-1"
+            containerClassName="h-[26px] border-[0.5px] shadow-[0_0.5px_2px_rgba(0,0,0,0.05)]"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value)
+              setSearchOpen(true)
+            }}
+            onFocus={() => setSearchOpen(true)}
+            onBlur={() => setSearchOpen(false)}
+            open={searchOpen}
+            results={searchResults}
+            onSelectResult={(result) => {
+              setSearchQuery(result.label)
+              setSearchOpen(false)
+            }}
           />
         </div>
         {header}
       </div>
 
-      <nav
-        ref={navRef}
-        style={{ maskImage, WebkitMaskImage: maskImage }}
-        className="mt-4 flex min-h-0 flex-1 flex-col gap-5 self-stretch overflow-y-auto overscroll-y-none scrollbar-hide"
-      >
-        {GROUPS.map((group) => (
-          <NavSection key={group.id} label={group.label}>
-            {group.items.map((item) => {
-              const expandable = item.expandable || (item.children?.length ?? 0) > 0
-              const expanded = !!open[item.id]
-              return (
-                <Fragment key={item.id}>
-                  <NavItem
-                    icon={item.icon}
-                    label={item.label}
-                    current={currentId === item.id}
-                    expandable={expandable}
-                    expanded={expanded}
-                    onClick={() => (expandable ? toggle(item.id) : setCurrentId(item.id))}
-                  />
-                  {expandable &&
-                    expanded &&
-                    item.children?.map((sub) => (
-                      <NavItem
-                        key={sub.id}
-                        label={sub.label}
-                        sub
-                        current={currentId === sub.id}
-                        onClick={() => setCurrentId(sub.id)}
-                      />
-                    ))}
-                </Fragment>
-              )
-            })}
-          </NavSection>
-        ))}
-      </nav>
+      <div className="relative mt-4 min-h-0 flex-1 self-stretch overflow-hidden">
+        <nav
+          ref={navRef}
+          className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-y-none scrollbar-hide"
+        >
+          {GROUPS.map((group) => (
+            <NavSection key={group.id} label={group.label}>
+              {group.items.map((item) => {
+                const expandable = item.expandable || (item.children?.length ?? 0) > 0
+                const expanded = !!open[item.id]
+                return (
+                  <Fragment key={item.id}>
+                    <NavItem
+                      icon={item.icon}
+                      label={item.label}
+                      current={currentId === item.id}
+                      expandable={expandable}
+                      expanded={expanded}
+                      onClick={() => (expandable ? toggle(item.id) : setCurrentId(item.id))}
+                    />
+                    {expandable &&
+                      expanded &&
+                      item.children?.map((sub) => (
+                        <NavItem
+                          key={sub.id}
+                          label={sub.label}
+                          sub
+                          current={currentId === sub.id}
+                          onClick={() => setCurrentId(sub.id)}
+                        />
+                      ))}
+                  </Fragment>
+                )
+              })}
+            </NavSection>
+          ))}
+        </nav>
+        {fade.top && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-7 bg-gradient-to-b from-background to-transparent" />
+        )}
+        {fade.bottom && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-7 bg-gradient-to-t from-background to-transparent" />
+        )}
+      </div>
 
       <div className="mt-2 flex shrink-0 flex-col gap-0.5 self-stretch">
         <Separator />

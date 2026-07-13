@@ -28,14 +28,14 @@ const CRUMB = "text-[12px] leading-[16px] font-normal whitespace-nowrap"
 function Crumb({ item, current }: { item: BreadcrumbItem; current: boolean }) {
   if (current) {
     return (
-      <span aria-current="page" className={cn(CRUMB, "text-black")}>
+      <span aria-current="page" className={cn(CRUMB, "text-primary")}>
         {item.label}
       </span>
     )
   }
   const cls = cn(
     CRUMB,
-    "rounded-sm text-[#8f8f8f] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-[#CFC7BC]",
+    "rounded-sm text-[#8f8f8f] outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC]",
     (item.href || item.onClick) && "cursor-pointer",
   )
   return item.href ? (
@@ -92,7 +92,7 @@ function EllipsisMenu({ items }: { items: BreadcrumbItem[] }) {
       {open && (
         <div
           role="menu"
-          className="absolute left-0 top-full z-20 mt-1 flex w-[216px] flex-col gap-1 rounded-[6px] border-[0.5px] border-black/10 bg-white px-1 py-2 shadow-[0_1px_1px_rgba(0,0,0,0.1),0_2px_2px_rgba(0,0,0,0.05),0_2px_3px_rgba(0,0,0,0.05),inset_0_0.5px_1px_rgba(255,255,255,0.25)]"
+          className="absolute left-0 top-full z-20 mt-1 flex w-[216px] flex-col gap-1 rounded-[6px] border-[0.5px] border-black/10 bg-white px-1 py-2 shadow-[0_1px_1px_0_rgba(0,0,0,0.05),0_4px_8px_0_rgba(0,0,0,0.05),0_2px_4px_0_rgba(0,0,0,0.05)]"
         >
           {items.map((item, i) => (
             <ListBase

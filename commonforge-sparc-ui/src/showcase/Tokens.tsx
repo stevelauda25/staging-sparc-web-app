@@ -68,7 +68,9 @@ export function TokensShowcase() {
 
       <Label>Semantic + brand utilities (verifies theme)</Label>
       <div className="flex gap-2 items-center flex-wrap">
-        <span className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-semibold">bg-primary</span>
+        <span className="rounded-md bg-brand text-brand-foreground px-3 py-1.5 text-xs font-semibold">bg-brand</span>
+        <span className="rounded-md bg-surface border border-border px-3 py-1.5 text-xs text-primary">text-primary</span>
+        <span className="rounded-md bg-surface border border-border px-3 py-1.5 text-xs text-secondary">text-secondary</span>
         <span className="rounded-md bg-surface border border-border px-3 py-1.5 text-xs">bg-surface / border-border</span>
         <span className="rounded-md bg-green-50 text-green-700 px-3 py-1.5 text-xs font-semibold">green</span>
         <span className="rounded-md bg-amber-50 text-amber-700 px-3 py-1.5 text-xs font-semibold">amber</span>

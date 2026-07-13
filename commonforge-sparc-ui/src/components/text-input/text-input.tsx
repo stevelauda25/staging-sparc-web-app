@@ -23,7 +23,7 @@ export interface TextInputProps
 /**
  * text-input — the raw input field.
  *
- * From Figma: fill gray-50 (#F5F5F5), 1px black/10 border, 6px radius. Focus
+ * From Figma: fill gray-50 (#F5F5F5), 0.5px black/10 border, 6px radius. Focus
  * (via focus-within) turns the border black and adds a 3px black/10 ring;
  * error uses the red-500 border; disabled uses gray-100 fill with #8F8F8F
  * text. 14px text, #525252 placeholder. Cool grays are arbitrary values for
@@ -54,7 +54,7 @@ export function TextInput({
   return (
     <div
       className={cn(
-        "flex items-stretch overflow-hidden rounded-[6px] border border-solid",
+        "flex items-stretch overflow-hidden rounded-[6px] border-[0.5px] border-solid",
         sizeClass,
         disabled
           ? "border-black/10 bg-[#EBEBEB]"
@@ -71,18 +71,18 @@ export function TextInput({
       )}
 
       <div className={cn("flex min-w-0 flex-1 items-center gap-2", fieldPad, fieldClassName)}>
-        {leading != null && <span className="flex shrink-0 items-center text-[#525252]">{leading}</span>}
+        {leading != null && <span className="flex shrink-0 items-center text-secondary">{leading}</span>}
         <input
           disabled={disabled}
           className={cn(
-            "min-w-0 flex-1 bg-transparent text-black outline-none placeholder:text-[#525252]",
+            "min-w-0 flex-1 bg-transparent text-primary outline-none placeholder:text-secondary",
             inputText,
             disabled && "text-[#8F8F8F] placeholder:text-[#8F8F8F]",
             className,
           )}
           {...props}
         />
-        {trailing != null && <span className="flex shrink-0 items-center text-[#525252]">{trailing}</span>}
+        {trailing != null && <span className="flex shrink-0 items-center text-secondary">{trailing}</span>}
       </div>
 
       {suffix != null && (

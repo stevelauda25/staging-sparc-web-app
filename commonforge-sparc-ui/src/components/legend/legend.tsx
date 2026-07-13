@@ -72,11 +72,11 @@ export function Legend({
     >
       <span className="flex items-center gap-1">
         <LegendSwatch variant={variant} color={color} dashed={dashed} bordered={bordered} />
-        <span className="text-[#525252]">{label}</span>
+        <span className="text-secondary">{label}</span>
       </span>
       {hasValue && (
         <span className="flex items-center gap-[2px]">
-          {value != null && <span className="text-[#525252]">{value}</span>}
+          {value != null && <span className="text-secondary">{value}</span>}
           {percent != null && <span className="text-[#8f8f8f]">{percent}</span>}
         </span>
       )}

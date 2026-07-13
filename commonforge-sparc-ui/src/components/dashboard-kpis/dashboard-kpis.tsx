@@ -5,17 +5,17 @@ const DEFAULT_KPIS = [
   {
     label: "Forecast need",
     value: "182",
-    description: "Workers needed this week",
+    description: "38 workers still need coverage",
   },
   {
     label: "Assigned",
     value: "144",
-    description: "Workers assigned so far",
+    description: "79% of forecast covered",
   },
   {
     label: "Total workforce",
     value: "142",
-    description: "Your total available crew",
+    description: "40 more needed than available",
   },
 ]
 

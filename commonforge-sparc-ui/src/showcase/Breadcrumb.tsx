@@ -20,7 +20,7 @@ export function BreadcrumbShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">breadcrumb</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         The page-location trail. 12px Geist, current page in black, ancestors in gray with a 12px
         chevron separator and a 14px gap. Long trails collapse the middle into an ellipsis dropdown,
         click the ... to open it.

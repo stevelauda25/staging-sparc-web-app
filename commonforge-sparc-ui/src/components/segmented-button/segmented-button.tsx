@@ -39,15 +39,18 @@ const SIZE = {
   },
 } as const
 
+const ACTIVE_INDICATOR_SHADOW =
+  "shadow-[0_4px_8px_-4px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.15),0_1px_2px_-1px_rgba(0,0,0,0.2),inset_0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.1),inset_0_0.5px_1px_0_rgba(255,255,255,0.25)]"
+
 function CountBadge({ count, selected, cls }: { count: number; selected: boolean; cls: string }) {
   return (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full font-normal leading-none tabular-nums",
+        "flex shrink-0 items-center justify-center rounded-full font-normal leading-none",
         cls,
         selected
           ? "bg-white/20 text-white"
-          : "bg-black/5 text-[#8f8f8f] group-hover:bg-black/10 group-hover:text-black",
+          : "bg-black/5 text-[#8f8f8f] group-hover:bg-black/10 group-hover:text-primary",
       )}
     >
       {count}
@@ -82,14 +85,10 @@ export function SegmentedButton({
     if (!root || !active) return
 
     const update = () => {
-      const rootRect = root.getBoundingClientRect()
-      const btnRect = active.getBoundingClientRect()
-      // left-0 sits at the padding box (inside the border), so subtract the border
-      const borderLeft = parseFloat(getComputedStyle(root).borderLeftWidth) || 0
       setPill({
-        left: btnRect.left - rootRect.left - borderLeft,
-        width: btnRect.width,
-        height: btnRect.height,
+        left: active.offsetLeft,
+        width: active.offsetWidth,
+        height: active.offsetHeight,
       })
     }
 
@@ -114,7 +113,8 @@ export function SegmentedButton({
         <span
           aria-hidden="true"
           className={cn(
-            "pointer-events-none absolute top-1/2 left-0 bg-[#3d3d3d] shadow-[0_1px_2px_rgba(0,0,0,0.12)] will-change-transform motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-[cubic-bezier(0.455,0.03,0.515,0.955)] motion-reduce:transition-none",
+            "pointer-events-none absolute top-1/2 left-0 bg-[#3d3d3d] will-change-transform motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-[cubic-bezier(0.455,0.03,0.515,0.955)] motion-reduce:transition-none",
+            ACTIVE_INDICATOR_SHADOW,
             s.indicator,
           )}
           style={{
@@ -143,7 +143,7 @@ export function SegmentedButton({
                 "group relative z-10 flex cursor-pointer items-center justify-center font-normal outline-none focus-visible:ring-2 focus-visible:ring-black/25 motion-safe:transition-colors",
                 s.button,
                 fill ? "min-w-0 flex-1 basis-0 px-0" : cn("shrink-0", s.hugPx),
-                selected ? "text-white" : "text-[#525252] hover:bg-black/5",
+                selected ? "text-white" : "text-secondary hover:bg-black/5",
               )}
             >
               {option.label}

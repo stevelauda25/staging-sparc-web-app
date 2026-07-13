@@ -23,11 +23,11 @@ export interface KpiCardProps {
   className?: string
 }
 
-// Text sizes match the dashboard's existing KPI card (label 14, value 20, desc
-// 12) per the request. Trend delta (14) and unit suffix (12) follow the Figma.
-const LABEL = "text-[14px] leading-[1.2] font-normal text-[#525252]"
-const VALUE = "font-sans text-[20px] leading-[1.2] font-medium tracking-normal text-black tabular-nums"
-const DESC = "text-[12px] leading-[14px] font-normal text-[#525252]"
+// Text sizes: label 12/16, value 20, desc 11/15 (per the request). Trend delta
+// (14) and unit suffix (12) follow the Figma.
+const LABEL = "text-[12px] leading-[16px] font-normal text-secondary"
+const VALUE = "font-sans text-[20px] leading-[1.2] font-medium tracking-normal text-primary"
+const DESC = "text-[11px] leading-[15px] font-normal text-secondary"
 
 /** an 8px filled triangle, pointing up by default (down = rotated) */
 function Triangle({ down }: { down?: boolean }) {
@@ -55,7 +55,7 @@ function ValueRow({ value, trend, suffix }: Pick<KpiCardProps, "value" | "trend"
         </span>
       ) : (
         suffix != null && (
-          <span className="py-[2px] text-[12px] leading-[1.2] font-normal text-[#525252]">{suffix}</span>
+          <span className="py-[2px] text-[12px] leading-[1.2] font-normal text-secondary">{suffix}</span>
         )
       )}
     </div>
@@ -104,7 +104,7 @@ export function KpiCard({
     <article className={cn(CARD, "flex items-start gap-4 rounded-[6px]", className)}>
       <div className="flex h-20 min-w-0 flex-1 flex-col items-start justify-between">
         <p className={LABEL}>{label}</p>
-        <div className="flex flex-col items-start gap-[4px]">
+        <div className="flex flex-col items-start gap-[6px]">
           <ValueRow value={value} trend={trend} suffix={suffix} />
           {description != null && <p className={DESC}>{description}</p>}
         </div>

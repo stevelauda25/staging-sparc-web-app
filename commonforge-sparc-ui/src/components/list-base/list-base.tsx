@@ -15,13 +15,17 @@ import { cn } from "@/lib/utils"
  * we settle warm vs cool neutrals across the system.
  */
 const listBase = cva(
-  "flex min-h-6 items-center gap-2 rounded-sm px-2 py-1 text-xs leading-4 select-none",
+  "flex min-h-6 items-center gap-2 rounded-sm select-none",
   {
     variants: {
+      size: {
+        sm: "px-2 py-1 text-xs leading-4",
+        md: "px-3 py-2 text-sm leading-5",
+      },
       state: {
-        default: "text-[#525252] hover:bg-[#F5F5F5]",
-        hover: "text-[#525252] bg-[#F5F5F5]",
-        selected: "text-[#525252] bg-[#F5F5F5]",
+        default: "text-secondary hover:bg-[#F5F5F5]",
+        hover: "text-secondary bg-[#F5F5F5]",
+        selected: "text-secondary bg-[#F5F5F5]",
         disabled: "text-[#A3A3A3] cursor-not-allowed",
       },
       tone: {
@@ -38,7 +42,7 @@ const listBase = cva(
       { tone: "danger", state: "selected", class: "text-red-500 bg-red-50" },
       { tone: "danger", state: "disabled", class: "text-red-200" },
     ],
-    defaultVariants: { state: "default", tone: "default" },
+    defaultVariants: { size: "sm", state: "default", tone: "default" },
   },
 )
 
@@ -57,18 +61,21 @@ export function ListBase({
   leading,
   trailing,
   children,
+  size = "sm",
   state,
   tone,
   className,
   ...props
 }: ListBaseProps) {
+  const iconClass = size === "md" ? "[&>svg]:h-[14px] [&>svg]:w-[14px]" : "[&>svg]:h-3 [&>svg]:w-3"
+
   return (
-    <div className={cn(listBase({ state, tone }), className)} {...props}>
+    <div className={cn(listBase({ size, state, tone }), className)} {...props}>
       <span className="flex min-w-0 flex-1 items-center gap-2">
-        {leading != null && <span className="flex shrink-0 items-center">{leading}</span>}
+        {leading != null && <span className={cn("flex shrink-0 items-center", iconClass)}>{leading}</span>}
         <span className="truncate">{children}</span>
       </span>
-      {trailing != null && <span className="flex shrink-0 items-center">{trailing}</span>}
+      {trailing != null && <span className={cn("flex shrink-0 items-center", iconClass)}>{trailing}</span>}
     </div>
   )
 }

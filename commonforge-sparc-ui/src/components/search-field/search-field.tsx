@@ -28,7 +28,7 @@ export interface SearchFieldProps
  * search-field — a text-input configured for search.
  *
  * Composes text-input with a leading search icon. When focused (or forced via
- * `open`) it shows a results dropdown: a white panel with a #E0E0E0 border and
+ * `open`) it shows a results dropdown: a white panel with a 0.5px #E0E0E0 border and
  * a layered shadow, whose rows are list-base. States (default, filled, error,
  * disabled) come from text-input.
  */
@@ -71,8 +71,8 @@ export function SearchField({
       {showResults && (
         <div
           className={cn(
-            "absolute left-0 top-full z-10 mt-1.5 w-full rounded-[6px] border border-[#E0E0E0] bg-surface p-2",
-            "shadow-[0_4px_6px_0_rgba(0,0,0,0.05),0_8px_12px_-2px_rgba(0,0,0,0.05),0_2px_12px_-8px_rgba(0,0,0,0.05)]",
+            "absolute left-0 top-full z-10 mt-1.5 w-full rounded-[6px] border-[0.5px] border-[#E0E0E0] bg-surface p-2",
+            "shadow-[0_1px_1px_0_rgba(0,0,0,0.05),0_4px_8px_0_rgba(0,0,0,0.05),0_2px_4px_0_rgba(0,0,0,0.05)]",
           )}
         >
           <div className="flex flex-col gap-2">
@@ -80,6 +80,7 @@ export function SearchField({
               <ListBase
                 key={r.id}
                 role="option"
+                size={size}
                 leading={r.leading}
                 trailing={r.trailing}
                 className="cursor-pointer"

@@ -22,7 +22,7 @@ export function SegmentedButtonShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">segmented-button</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         A single-select button group. Two sizes: medium (14px) and small (12px). Selected fills
         #3d3d3d, idle is #525252, hover a subtle gray. Each segment can carry an optional count badge
         (its color follows the state). Dividers hide on either side of the selected segment.

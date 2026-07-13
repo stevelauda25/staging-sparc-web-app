@@ -19,7 +19,7 @@ export function SeparatorShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">separator</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         A hairline divider. 12px row, 8px inset (aligns with row text), 1px line at black/10.
       </p>
 

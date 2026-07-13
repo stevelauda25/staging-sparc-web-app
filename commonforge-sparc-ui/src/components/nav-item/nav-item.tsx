@@ -72,7 +72,7 @@ export function NavItem({
       tone={danger ? "danger" : undefined}
       state={disabled ? "disabled" : current ? "selected" : "default"}
       leading={!sub && Icon ? <Icon className={NAV_ICON_CLASS} /> : undefined}
-      trailing={expandable ? <Chevron className={cn(NAV_ICON_CLASS, "text-[#8B8175]")} /> : undefined}
+      trailing={expandable ? <Chevron className={cn(NAV_ICON_CLASS, "text-[#525252]")} /> : undefined}
       onClick={disabled ? undefined : onClick}
       className={cn(
         "outline-none",

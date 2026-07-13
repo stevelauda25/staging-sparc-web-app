@@ -87,7 +87,7 @@
   --subtle-foreground: #8B8175;
   --border-hairline: #E2DCD4;
   --border-strong: #CFC7BC;
-  --primary: #C0180C;
+  --primary: #000000;
   --primary-hover: #98150B;
   --primary-foreground: #FFFFFF;
   --danger: #E51D31;
@@ -189,8 +189,7 @@
 
 html {
   /* THE ONE KNOB. The base size the whole UI scales from. Everything is
-     authored in rem, so raising this enlarges the entire app uniformly (try
-     17px or 18px to go bigger, 15px to go smaller). It is a fixed value, never
+     authored in rem, so raising this enlarges the entire app uniformly. It is a fixed value, never
      tied to the viewport, so resizing the window never rescales anything. */
   font-size: 16px;
 }
@@ -209,5 +208,14 @@ body {
   -ms-overflow-style: none; /* legacy Edge */
   &::-webkit-scrollbar {
     display: none; /* Chrome, Safari */
+  }
+}
+
+@keyframes progress-bar-indeterminate {
+  0% {
+    transform: translateX(-115%);
+  }
+  100% {
+    transform: translateX(315%);
   }
 }

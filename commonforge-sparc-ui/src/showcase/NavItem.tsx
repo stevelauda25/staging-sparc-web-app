@@ -24,7 +24,7 @@ export function NavItemShowcase() {
   return (
     <section className="mt-12">
       <h2 className="text-base font-bold">nav-item</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-secondary mb-4">
         A sidebar navigation row built on list-base. Leading icon, label, optional expand chevron.
         States: default, hover, current, disabled. Structural variants: expandable and sub.
       </p>

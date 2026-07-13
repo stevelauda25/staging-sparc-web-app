@@ -10,6 +10,10 @@ import { BreadcrumbShowcase } from "./Breadcrumb"
 import { KpiCardShowcase } from "./KpiCard"
 import { SegmentedButtonShowcase } from "./SegmentedButton"
 import { LegendShowcase } from "./Legend"
+import { ChartTooltipShowcase } from "./ChartTooltip"
+import { ProgressBarBaseShowcase } from "./ProgressBarBase"
+import { ProgressBarShowcase } from "./ProgressBar"
+import { ProgressValueBarShowcase } from "./ProgressValueBar"
 import { SidebarShowcase } from "./Sidebar"
 
 /** The component library reference page. Reachable at #showcase. */
@@ -37,6 +41,10 @@ export function Showcase() {
         <KpiCardShowcase />
         <SegmentedButtonShowcase />
         <LegendShowcase />
+        <ChartTooltipShowcase />
+        <ProgressBarBaseShowcase />
+        <ProgressBarShowcase />
+        <ProgressValueBarShowcase />
         <SidebarShowcase />
       </main>
     </div>
