@@ -583,6 +583,42 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
               }}
               options={RANGE_OPTIONS.map((o) => ({ value: o, label: o }))}
             />
+            <div ref={dateFilterRef} className="relative shrink-0">
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={dateOpen}
+                onClick={() => setDateOpen((open) => !open)}
+                className={cn(
+                  "flex h-[26px] items-center justify-center gap-1 whitespace-nowrap rounded-[6px] border-[0.5px] border-black/10 bg-white px-2.5 py-1 text-xs leading-[14px] font-normal text-primary shadow-[inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.2),inset_0_0.5px_0.5px_0_rgba(255,255,255,0.25)] hover:border-black/30",
+                  dateOpen && "border-black/30",
+                )}
+              >
+                <Calendar className="size-3 shrink-0 text-primary" />
+                {formatDateRange(dateRange)}
+                <ChevronDown size={12} className={cn("text-primary", dateOpen && "rotate-180")} />
+              </button>
+              {dateOpen && (
+                <div className="absolute left-0 top-full z-30 mt-1">
+                  <DatePicker
+                    variant="range"
+                    defaultMonth={dateRange.start ?? undefined}
+                    range={dateRange}
+                    defaultRange={dateRange}
+                    onApplyRange={(range) => {
+                      setDateRange(range)
+                      setDateOpen(false)
+                      clearHover()
+                    }}
+                    onClearRange={() => {
+                      setDateRange({ start: null, end: null })
+                      setDateOpen(false)
+                      clearHover()
+                    }}
+                  />
+                </div>
+              )}
+            </div>
             <div ref={graphFilterRef} className="relative shrink-0">
               <button
                 type="button"
@@ -633,43 +669,6 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                       </ListBase>
                     )
                   })}
-                </div>
-              )}
-            </div>
-
-            <div ref={dateFilterRef} className="relative shrink-0">
-              <button
-                type="button"
-                aria-haspopup="dialog"
-                aria-expanded={dateOpen}
-                onClick={() => setDateOpen((open) => !open)}
-                className={cn(
-                  "flex h-[26px] items-center justify-center gap-1 whitespace-nowrap rounded-[6px] border-[0.5px] border-black/10 bg-white px-2.5 py-1 text-xs leading-[14px] font-normal text-primary shadow-[inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.2),inset_0_0.5px_0.5px_0_rgba(255,255,255,0.25)] hover:border-black/30",
-                  dateOpen && "border-black/30",
-                )}
-              >
-                <Calendar className="size-3 shrink-0 text-primary" />
-                {formatDateRange(dateRange)}
-                <ChevronDown size={12} className={cn("text-primary", dateOpen && "rotate-180")} />
-              </button>
-              {dateOpen && (
-                <div className="absolute left-0 top-full z-30 mt-1">
-                  <DatePicker
-                    variant="range"
-                    defaultMonth={dateRange.start ?? undefined}
-                    range={dateRange}
-                    defaultRange={dateRange}
-                    onApplyRange={(range) => {
-                      setDateRange(range)
-                      setDateOpen(false)
-                      clearHover()
-                    }}
-                    onClearRange={() => {
-                      setDateRange({ start: null, end: null })
-                      setDateOpen(false)
-                      clearHover()
-                    }}
-                  />
                 </div>
               )}
             </div>
