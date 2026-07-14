@@ -1,5 +1,8 @@
 // Common Forge component library barrel.
 export * from "./list-base"
+export * from "./overlay-scroll-area"
+export * from "./day"
+export * from "./date-picker"
 export * from "./nav-item"
 export * from "./nav-section"
 export * from "./separator"

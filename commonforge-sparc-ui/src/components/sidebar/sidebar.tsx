@@ -286,6 +286,7 @@ export function Sidebar({ header, floating = false, className }: SidebarProps) {
       <div className="relative mt-4 min-h-0 flex-1 self-stretch overflow-hidden">
         <nav
           ref={navRef}
+          aria-label="Main"
           className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-y-none scrollbar-hide"
         >
           {GROUPS.map((group) => (

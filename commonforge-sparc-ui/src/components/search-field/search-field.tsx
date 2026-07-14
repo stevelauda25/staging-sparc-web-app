@@ -62,6 +62,9 @@ export function SearchField({
           ) : undefined
         }
         placeholder={placeholder}
+        // a placeholder is not an accessible name, so give the field a real one
+        // (WCAG 3.3.2). Callers can still override via props.
+        aria-label={placeholder}
         containerClassName={containerClassName}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
@@ -75,7 +78,8 @@ export function SearchField({
             "shadow-[0_1px_1px_0_rgba(0,0,0,0.05),0_4px_8px_0_rgba(0,0,0,0.05),0_2px_4px_0_rgba(0,0,0,0.05)]",
           )}
         >
-          <div className="flex flex-col gap-2">
+          {/* role="option" rows must live inside a listbox to be valid ARIA */}
+          <div role="listbox" aria-label={placeholder} className="flex flex-col gap-2">
             {results!.map((r) => (
               <ListBase
                 key={r.id}

@@ -74,6 +74,19 @@ export function NavItem({
       leading={!sub && Icon ? <Icon className={NAV_ICON_CLASS} /> : undefined}
       trailing={expandable ? <Chevron className={cn(NAV_ICON_CLASS, "text-[#525252]")} /> : undefined}
       onClick={disabled ? undefined : onClick}
+      // role="button" on a <div> gives no native Enter/Space activation, so wire
+      // it up by hand (calling the element's own click) to keep the rail fully
+      // keyboard-operable (WCAG 2.1.1).
+      onKeyDown={
+        disabled
+          ? undefined
+          : (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                e.currentTarget.click()
+              }
+            }
+      }
       className={cn(
         "outline-none",
         !disabled && "cursor-pointer",

@@ -23,6 +23,9 @@ export function DashboardFrame({
   className,
 }: DashboardFrameProps) {
   const { collapsed } = useShell()
+  // the last breadcrumb entry is the current page; expose it as the page's h1 so
+  // screen-reader users get a top-level heading (the breadcrumb shows it visually)
+  const currentPage = breadcrumb[breadcrumb.length - 1]?.label ?? "Dashboard"
   return (
     <section
       data-node-id="2533:3618"
@@ -43,6 +46,7 @@ export function DashboardFrame({
             collapsed ? "pl-1.5" : "pl-3",
           )}
         >
+          <h1 className="sr-only">{currentPage}</h1>
           {/* when collapsed the expand toggle lives here as a real header child, so
               it scrolls with the header rather than floating pinned over it */}
           {collapsed && <SidebarToggle />}

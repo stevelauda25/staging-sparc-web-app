@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { SegmentedButton } from "@/components/segmented-button"
 import { Legend } from "@/components/legend"
 import { ChartTooltip } from "@/components/chart-tooltip"
+import { OverlayScrollArea } from "@/components/overlay-scroll-area"
 
 const CARD_SHADOW =
   "shadow-[0_2px_6px_-4px_rgba(0,0,0,0.05),0_1px_3px_-2px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1),inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.1),inset_0_0.5px_0.5px_0_rgba(255,255,255,0.1)]"
@@ -90,7 +91,102 @@ const MAP_PINS = [
   { label: "WH", status: "in-progress", job: "WIC HQ Expansion", id: "#25014", crew: 8, lat: 39.9205, lng: -105.0867 },
   { label: "AP", status: "in-progress", job: "Aurora Safety Vestibule", id: "#25033", crew: 11, lat: 39.7294, lng: -104.8319 },
   { label: "MP", status: "in-progress", job: "Mapleton Admin TI", id: "#25030", crew: 7, lat: 39.868, lng: -104.9719 },
+  { label: "PG", status: "staffed", job: "Pine Grove Gym Lighting", id: "#25034", crew: 10, lat: 39.7404, lng: -105.1573 },
+  { label: "SL", status: "staffed", job: "Skyline MEP Upgrade", id: "#25021", crew: 9, lat: 39.7392, lng: -104.9903 },
+  { label: "FR", status: "staffed", job: "Fossil Ridge Upgrade", id: "#25035", crew: 16, lat: 40.5032, lng: -105.0125 },
+  { label: "HL", status: "staffed", job: "Holly Hills Repl ES", id: "#25011", crew: 23, lat: 39.6642, lng: -104.9151 },
+  { label: "FV", status: "staffed", job: "BVSD Fairview HS", id: "#25012", crew: 16, lat: 39.9968, lng: -105.2641 },
+  { label: "RH", status: "staffed", job: "Redstone HVAC Phase 2", id: "#25020", crew: 21, lat: 39.5667, lng: -105.0697 },
+  { label: "SV", status: "in-progress", job: "Summit Lab Renovation", id: "#25024", crew: 11, lat: 39.7555, lng: -105.2211 },
+  { label: "MS", status: "in-progress", job: "Mason Street Retrofit", id: "#25036", crew: 5, lat: 40.5898, lng: -105.077 },
+  { label: "HC", status: "in-progress", job: "Harmony Lab Buildout", id: "#25037", crew: 13, lat: 40.515, lng: -105.025 },
+  { label: "PS", status: "in-progress", job: "Prospect Shop Fitout", id: "#25038", crew: 4, lat: 40.567, lng: -105.092 },
+  { label: "TM", status: "in-progress", job: "Timnath Service Wing", id: "#25039", crew: 15, lat: 40.5292, lng: -104.985 },
+  { label: "LV", status: "staffed", job: "Loveland Medical Wing", id: "#25040", crew: 12, lat: 40.3978, lng: -105.075 },
+  { label: "GR", status: "staffed", job: "Greeley Admin Center", id: "#25041", crew: 18, lat: 40.4233, lng: -104.7091 },
+  { label: "WN", status: "staffed", job: "Windsor Field Office", id: "#25042", crew: 7, lat: 40.4775, lng: -104.9014 },
+  { label: "JT", status: "staffed", job: "Johnstown Service Yard", id: "#25043", crew: 6, lat: 40.3369, lng: -104.9122 },
+  { label: "BT", status: "staffed", job: "Berthoud Shop Retrofit", id: "#25044", crew: 9, lat: 40.3083, lng: -105.0811 },
+  { label: "LG", status: "staffed", job: "Longmont Career Tech", id: "#25045", crew: 17, lat: 40.1643, lng: -105.1036 },
+  { label: "LF", status: "staffed", job: "Lafayette Elementary", id: "#25046", crew: 10, lat: 39.9936, lng: -105.0897 },
+  { label: "ER", status: "staffed", job: "Erie Campus Addition", id: "#25047", crew: 14, lat: 40.0503, lng: -105.05 },
+  { label: "SU", status: "staffed", job: "Superior Fire Alarm", id: "#25048", crew: 5, lat: 39.9525, lng: -105.1677 },
+  { label: "AR", status: "staffed", job: "Arvada Learning Center", id: "#25049", crew: 15, lat: 39.8028, lng: -105.0875 },
+  { label: "WT", status: "staffed", job: "Westminster Yard", id: "#25050", crew: 8, lat: 39.8367, lng: -105.0372 },
+  { label: "BR", status: "staffed", job: "Brighton High School", id: "#25051", crew: 19, lat: 39.9853, lng: -104.8205 },
+  { label: "LC", status: "staffed", job: "Littleton Civic HVAC", id: "#25052", crew: 11, lat: 39.6133, lng: -105.0166 },
+  { label: "CM", status: "staffed", job: "Castle Rock Middle", id: "#25053", crew: 16, lat: 39.3727, lng: -104.8561 },
+  { label: "MO", status: "staffed", job: "Monument Athletic Fields", id: "#25054", crew: 13, lat: 39.0917, lng: -104.8728 },
+  { label: "CS", status: "staffed", job: "Colorado Springs Lab", id: "#25055", crew: 20, lat: 38.8339, lng: -104.8214 },
+  { label: "FY", status: "in-progress", job: "Fort Collins Yard", id: "#25056", crew: 6, lat: 40.5853, lng: -105.0844 },
+  { label: "LW", status: "in-progress", job: "Loveland West ES", id: "#25057", crew: 9, lat: 40.3972, lng: -105.0749 },
+  { label: "GV", status: "in-progress", job: "Greeley Vocational", id: "#25058", crew: 8, lat: 40.423, lng: -104.7095 },
+  { label: "BD", status: "in-progress", job: "Boulder District Office", id: "#25059", crew: 11, lat: 40.015, lng: -105.2705 },
+  { label: "LM", status: "in-progress", job: "Louisville Mechanical", id: "#25060", crew: 7, lat: 39.9778, lng: -105.1319 },
+  { label: "BM", status: "in-progress", job: "Broomfield Modular", id: "#25061", crew: 10, lat: 39.92, lng: -105.086 },
+  { label: "TH", status: "in-progress", job: "Thornton Security", id: "#25062", crew: 12, lat: 39.8684, lng: -104.9711 },
+  { label: "CY", status: "in-progress", job: "Commerce City Ops", id: "#25063", crew: 5, lat: 39.8083, lng: -104.9339 },
+  { label: "LK", status: "in-progress", job: "Lakewood Controls", id: "#25064", crew: 8, lat: 39.7047, lng: -105.0814 },
+  { label: "CN", status: "in-progress", job: "Centennial Tech Lab", id: "#25065", crew: 14, lat: 39.5807, lng: -104.8772 },
+  { label: "HR", status: "in-progress", job: "Highlands Ranch Wing", id: "#25066", crew: 12, lat: 39.5447, lng: -104.9706 },
+  { label: "PK", status: "in-progress", job: "Parker East Wing", id: "#25067", crew: 9, lat: 39.5186, lng: -104.7614 },
+  { label: "FG", status: "in-progress", job: "Fountain Generator", id: "#25068", crew: 6, lat: 38.6822, lng: -104.7008 },
+  { label: "PB", status: "in-progress", job: "Pueblo West Yard", id: "#25069", crew: 13, lat: 38.35, lng: -104.7228 },
+  { label: "PC", status: "in-progress", job: "Pueblo Central HS", id: "#25070", crew: 18, lat: 38.263, lng: -104.612 },
+  { label: "WD", status: "in-progress", job: "Woodland Park HS", id: "#25071", crew: 7, lat: 38.9939, lng: -105.0569 },
+  { label: "EP", status: "in-progress", job: "Estes Park Visitor Remodel", id: "#25072", crew: 8, lat: 40.3772, lng: -105.5217 },
+  { label: "LY", status: "in-progress", job: "Lyons School Controls", id: "#25073", crew: 5, lat: 40.2247, lng: -105.2714 },
+  { label: "ND", status: "in-progress", job: "Nederland Field Shop", id: "#25074", crew: 6, lat: 39.9614, lng: -105.5108 },
+  { label: "EV", status: "in-progress", job: "Evergreen Mechanical", id: "#25075", crew: 11, lat: 39.6333, lng: -105.3172 },
+  { label: "CF", status: "in-progress", job: "Conifer Elementary", id: "#25076", crew: 9, lat: 39.5228, lng: -105.3053 },
+  { label: "ID", status: "in-progress", job: "Idaho Springs Ops", id: "#25077", crew: 7, lat: 39.7425, lng: -105.5136 },
+  { label: "GT", status: "in-progress", job: "Georgetown Lighting", id: "#25078", crew: 4, lat: 39.7061, lng: -105.6975 },
+  { label: "SX", status: "in-progress", job: "Silverthorne Service", id: "#25079", crew: 10, lat: 39.6321, lng: -106.0743 },
+  { label: "DL", status: "in-progress", job: "Dillon Admin Center", id: "#25080", crew: 6, lat: 39.6303, lng: -106.0434 },
+  { label: "BN", status: "in-progress", job: "Breckenridge Field Lab", id: "#25081", crew: 12, lat: 39.4817, lng: -106.0384 },
+  { label: "VA", status: "in-progress", job: "Vail Fire Alarm", id: "#25082", crew: 8, lat: 39.6403, lng: -106.3742 },
+  { label: "ED", status: "in-progress", job: "Edwards School Wing", id: "#25083", crew: 13, lat: 39.6425, lng: -106.5942 },
+  { label: "AV", status: "in-progress", job: "Avon Rec Center", id: "#25084", crew: 9, lat: 39.6314, lng: -106.5222 },
+  { label: "GS", status: "in-progress", job: "Glenwood Springs Health", id: "#25085", crew: 14, lat: 39.5505, lng: -107.3248 },
+  { label: "RI", status: "in-progress", job: "Rifle Workforce Yard", id: "#25086", crew: 7, lat: 39.5347, lng: -107.7831 },
+  { label: "GJ", status: "in-progress", job: "Grand Junction Campus", id: "#25087", crew: 18, lat: 39.0639, lng: -108.5506 },
+  { label: "FT", status: "in-progress", job: "Fruita Service Annex", id: "#25088", crew: 5, lat: 39.1589, lng: -108.7289 },
+  { label: "MT", status: "in-progress", job: "Montrose Field Office", id: "#25089", crew: 10, lat: 38.4783, lng: -107.8762 },
+  { label: "DV", status: "in-progress", job: "Delta Vocational Lab", id: "#25090", crew: 8, lat: 38.7422, lng: -108.0689 },
+  { label: "GU", status: "in-progress", job: "Gunnison College Shop", id: "#25091", crew: 13, lat: 38.5458, lng: -106.9253 },
+  { label: "CB", status: "in-progress", job: "Crested Butte HVAC", id: "#25092", crew: 6, lat: 38.8697, lng: -106.9878 },
+  { label: "SA", status: "in-progress", job: "Salida School Remodel", id: "#25093", crew: 11, lat: 38.5347, lng: -105.9989 },
+  { label: "BA", status: "in-progress", job: "Buena Vista Shop", id: "#25094", crew: 8, lat: 38.8422, lng: -106.1311 },
+  { label: "CE", status: "in-progress", job: "Canon City Controls", id: "#25095", crew: 12, lat: 38.4494, lng: -105.2253 },
+  { label: "TN", status: "in-progress", job: "Trinidad District Office", id: "#25096", crew: 7, lat: 37.1695, lng: -104.5005 },
+  { label: "AL", status: "in-progress", job: "Alamosa Career Center", id: "#25097", crew: 9, lat: 37.4694, lng: -105.87 },
+  { label: "DR", status: "in-progress", job: "Durango Campus Wing", id: "#25098", crew: 15, lat: 37.2753, lng: -107.8801 },
+  { label: "CO", status: "in-progress", job: "Cortez Service Center", id: "#25099", crew: 6, lat: 37.3489, lng: -108.5859 },
+  { label: "TL", status: "in-progress", job: "Telluride Mountain School", id: "#25100", crew: 5, lat: 37.9375, lng: -107.8123 },
+  { label: "OR", status: "in-progress", job: "Ouray Facilities Yard", id: "#25101", crew: 4, lat: 38.0228, lng: -107.6714 },
+  { label: "EA", status: "in-progress", job: "Eagle County Annex", id: "#25102", crew: 10, lat: 39.6553, lng: -106.8287 },
+  { label: "LD", status: "in-progress", job: "Leadville High School", id: "#25103", crew: 8, lat: 39.2508, lng: -106.2925 },
+  { label: "WP", status: "in-progress", job: "Winter Park Lift Shop", id: "#25104", crew: 6, lat: 39.8917, lng: -105.7631 },
+  { label: "GN", status: "in-progress", job: "Granby Service Garage", id: "#25105", crew: 7, lat: 40.0861, lng: -105.9395 },
+  { label: "ST", status: "in-progress", job: "Steamboat Springs Lab", id: "#25106", crew: 11, lat: 40.485, lng: -106.8317 },
+  { label: "CR", status: "in-progress", job: "Craig Operations Center", id: "#25107", crew: 9, lat: 40.5152, lng: -107.5464 },
+  { label: "HD", status: "in-progress", job: "Hayden School Controls", id: "#25108", crew: 5, lat: 40.4953, lng: -107.257 },
+  { label: "WL", status: "in-progress", job: "Walsenburg District Yard", id: "#25109", crew: 8, lat: 37.6242, lng: -104.7803 },
+  { label: "LJ", status: "in-progress", job: "La Junta Vocational", id: "#25110", crew: 6, lat: 37.985, lng: -103.5438 },
+  { label: "LR", status: "in-progress", job: "Lamar High School", id: "#25111", crew: 10, lat: 38.0872, lng: -102.6208 },
+  { label: "BU", status: "in-progress", job: "Burlington Field Office", id: "#25112", crew: 4, lat: 39.3061, lng: -102.2694 },
+  { label: "FM", status: "in-progress", job: "Fort Morgan Warehouse", id: "#25113", crew: 12, lat: 40.2503, lng: -103.7999 },
+  { label: "SG", status: "in-progress", job: "Sterling Campus Upgrade", id: "#25114", crew: 9, lat: 40.6255, lng: -103.2077 },
+  { label: "AK", status: "in-progress", job: "Akron Maintenance Yard", id: "#25115", crew: 5, lat: 40.1605, lng: -103.2144 },
+  { label: "YC", status: "in-progress", job: "Yuma Community School", id: "#25116", crew: 7, lat: 40.1222, lng: -102.7252 },
+  { label: "WY", status: "in-progress", job: "Wray District Shop", id: "#25117", crew: 6, lat: 40.0758, lng: -102.2232 },
+  { label: "KT", status: "in-progress", job: "Kit Carson Field House", id: "#25118", crew: 4, lat: 38.7644, lng: -102.7957 },
+  { label: "SP", status: "in-progress", job: "Springfield Controls", id: "#25119", crew: 5, lat: 37.4083, lng: -102.6144 },
 ] as const
+
+const TOTAL_ACTIVE_JOBS = 104
+const STAFFED_PIN_COUNT = MAP_PINS.filter((pin) => pin.status === "staffed").length
+const UNMAPPED_JOB_COUNT = Math.max(0, TOTAL_ACTIVE_JOBS - MAP_PINS.length)
 
 type BudgetView = "status" | "utilization"
 type BudgetLegendItem = (typeof BUDGET_LEGEND)[number]
@@ -139,8 +235,8 @@ function MapTabs({ value, onChange }: { value: string; onChange: (value: string)
       value={value}
       onChange={onChange}
       options={[
-        { value: "active", label: "All active", count: 15 },
-        { value: "staffed", label: "Staffed", count: 24 },
+        { value: "active", label: "All active", count: MAP_PINS.length },
+        { value: "staffed", label: "Staffed", count: STAFFED_PIN_COUNT },
       ]}
     />
   )
@@ -330,12 +426,23 @@ function JobMapPanel() {
               keeps the map's z-index stack from fighting the hover tooltip */}
           <div
             ref={mapFrame}
+            role="group"
+            aria-label={`Map of ${MAP_PINS.length} job sites across Colorado. Site list follows.`}
             className={cn(
               "relative isolate h-[414px] w-full overflow-hidden rounded-[6px] border-[0.5px] border-black/10 bg-[#f5f5f5]",
               ZOOM_CONTROL_CLASS,
             )}
           >
             <div ref={mapHost} className="h-full w-full" />
+            {/* text alternative: the Leaflet pins are not exposed to assistive tech,
+                so mirror the same data as a visually-hidden list */}
+            <ul className="sr-only">
+              {MAP_PINS.map((pin) => (
+                <li key={pin.id}>
+                  {pin.job} ({pin.id}), {PIN_STATUS_LABEL[pin.status]}, {pin.crew} crew
+                </li>
+              ))}
+            </ul>
             {tip != null && (
               <ChartTooltip
                 title={tip.pin.job}
@@ -356,7 +463,8 @@ function JobMapPanel() {
           </div>
         </div>
         <p className="mt-2 text-[11px] leading-[15px] font-normal text-secondary">
-          95 of 104 active jobs mapped (9 have no mappable address). Hover a pin for details.
+          {MAP_PINS.length} of {TOTAL_ACTIVE_JOBS} active jobs mapped ({UNMAPPED_JOB_COUNT} have no mappable address).
+          Hover a pin for details.
         </p>
       </div>
     </Panel>
@@ -487,29 +595,33 @@ function BudgetStatusContent() {
 
 function BudgetUtilizationContent() {
   return (
-    <div
+    <OverlayScrollArea
       role="tabpanel"
       aria-label="Budget utilization"
-      className="mt-[20px] flex min-h-0 flex-1 flex-col gap-[10px] overflow-y-auto overscroll-contain scrollbar-hide"
+      wrapperClassName="mt-[20px] min-h-0 flex-1"
+      className="h-full"
+      scrollbarRight={-7}
     >
-      {BUDGET_UTILIZATION_ROWS.map((row) => (
-        <div
-          key={row.job}
-          aria-label={`${row.job} budget utilization ${row.value}`}
-          className="relative h-[23px] shrink-0 overflow-hidden rounded-[4px] border-[0.5px] border-black/10 bg-black/[0.05]"
-        >
-          <div
-            className="absolute inset-y-0 left-0 flex items-center rounded-[4px] bg-[#c0180c] px-[6px] py-1"
-            style={{ width: `${row.fill}%` }}
-          >
-            <span className="truncate text-[11px] leading-[15px] font-normal text-white">{row.job}</span>
-          </div>
-          <span className="absolute inset-y-0 right-[6px] flex items-center py-1 text-[11px] leading-[15px] font-normal text-primary">
-            {row.value}
-          </span>
+      <div className="flex flex-col gap-[10px]">
+        {BUDGET_UTILIZATION_ROWS.map((row) => (
+            <div
+              key={row.job}
+              aria-label={`${row.job} budget utilization ${row.value}`}
+              className="relative h-[23px] shrink-0 overflow-hidden rounded-[4px] border-[0.5px] border-black/10 bg-black/[0.05]"
+            >
+              <div
+                className="absolute inset-y-0 left-0 flex items-center rounded-[4px] bg-[#c0180c] px-[6px] py-1"
+                style={{ width: `${row.fill}%` }}
+              >
+                <span className="truncate text-[11px] leading-[15px] font-normal text-white">{row.job}</span>
+              </div>
+              <span className="absolute inset-y-0 right-[6px] flex items-center py-1 text-[11px] leading-[15px] font-normal text-primary">
+                {row.value}
+              </span>
+            </div>
+          ))}
         </div>
-      ))}
-      </div>
+      </OverlayScrollArea>
   )
 }
 

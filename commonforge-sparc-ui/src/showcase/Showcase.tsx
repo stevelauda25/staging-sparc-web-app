@@ -1,5 +1,7 @@
 import { TokensShowcase } from "./Tokens"
 import { ListBaseShowcase } from "./ListBase"
+import { DayShowcase } from "./Day"
+import { DatePickerShowcase } from "./DatePicker"
 import { NavItemShowcase } from "./NavItem"
 import { NavSectionShowcase } from "./NavSection"
 import { SeparatorShowcase } from "./Separator"
@@ -30,6 +32,8 @@ export function Showcase() {
       <main className="px-8 py-7 max-w-5xl mx-auto">
         <TokensShowcase />
         <ListBaseShowcase />
+        <DayShowcase />
+        <DatePickerShowcase />
         <NavItemShowcase />
         <NavSectionShowcase />
         <SeparatorShowcase />

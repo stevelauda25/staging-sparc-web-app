@@ -16,6 +16,10 @@ export interface LegendProps {
   percent?: string
   /** line variant only: dashed vs solid stroke (default dashed) */
   dashed?: boolean
+  /** line variant only: explicit stroke style; overrides `dashed` when set. Use
+   *  distinct styles (e.g. dashed vs dotted) so lines differ by shape, not just
+   *  color, for colorblind readers. */
+  lineStyle?: "solid" | "dashed" | "dotted"
   /** square variant only: subtle white hairline around the chip (matches the donut legend) */
   bordered?: boolean
   className?: string
@@ -25,14 +29,15 @@ function LegendSwatch({
   variant,
   color,
   dashed,
+  lineStyle,
   bordered,
-}: Pick<LegendProps, "variant" | "color" | "dashed" | "bordered">) {
+}: Pick<LegendProps, "variant" | "color" | "dashed" | "lineStyle" | "bordered">) {
   if (variant === "line") {
     return (
       <span
         aria-hidden="true"
-        className="h-px w-2.5 shrink-0 border-t"
-        style={{ borderColor: color, borderTopStyle: dashed ? "dashed" : "solid" }}
+        className="h-px w-3.5 shrink-0 border-t"
+        style={{ borderColor: color, borderTopStyle: lineStyle ?? (dashed ? "dashed" : "solid") }}
       />
     )
   }
@@ -58,6 +63,7 @@ export function Legend({
   value,
   percent,
   dashed = true,
+  lineStyle,
   bordered = false,
   className,
 }: LegendProps) {
@@ -71,7 +77,7 @@ export function Legend({
       )}
     >
       <span className="flex items-center gap-1">
-        <LegendSwatch variant={variant} color={color} dashed={dashed} bordered={bordered} />
+        <LegendSwatch variant={variant} color={color} dashed={dashed} lineStyle={lineStyle} bordered={bordered} />
         <span className="text-secondary">{label}</span>
       </span>
       {hasValue && (

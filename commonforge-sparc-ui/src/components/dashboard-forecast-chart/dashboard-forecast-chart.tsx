@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react"
-import { ChevronDown, ChevronRight } from "@untitledui/icons"
+import { Calendar, ChevronDown, ChevronRight } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { SegmentedButton } from "@/components/segmented-button"
 import { Legend } from "@/components/legend"
 import { ListBase } from "@/components/list-base"
 import { ChartTooltip } from "@/components/chart-tooltip"
+import { DatePicker } from "@/components/date-picker"
 
 // 24 months of forecast horizon (2 years). The range control shows the first N
 // of these, so a shorter range zooms into the near-term forecast.
@@ -96,32 +97,247 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
 
-function weekRangeForX(x: number, count: number) {
-  if (count <= 1) return formatWeekRange(0)
-
-  const timelineStart = Date.UTC(TIMELINE_START_YEAR, TIMELINE_START_MONTH, 1)
-  const progress = clamp(((x - PLOT.left) / PLOT.width) * (count - 1), 0, count - 1)
-  const monthIndex = Math.min(Math.floor(progress + 0.0001), count - 1)
-  const monthProgress = monthIndex >= count - 1 ? 0 : progress - monthIndex
-  const monthStart = Date.UTC(TIMELINE_START_YEAR, TIMELINE_START_MONTH + monthIndex, 1)
-  const monthEnd = Date.UTC(TIMELINE_START_YEAR, TIMELINE_START_MONTH + monthIndex + 1, 1)
-  const dayOffsetInMonth = Math.floor(((monthEnd - monthStart) * monthProgress) / MS_PER_DAY)
-  const currentDate = monthStart + dayOffsetInMonth * MS_PER_DAY
-  const absoluteDayOffset = Math.floor((currentDate - timelineStart) / MS_PER_DAY)
-  const weekStartOffset = Math.floor(absoluteDayOffset / 7) * 7
-
-  return formatWeekRange(weekStartOffset)
+function timelineDate(year: number, month: number, day = 1) {
+  return new Date(Date.UTC(year, month, day))
 }
 
-function formatWeekRange(weekStartOffset: number) {
-  const start = new Date(Date.UTC(TIMELINE_START_YEAR, TIMELINE_START_MONTH, 1 + weekStartOffset))
-  const end = new Date(start.getTime() + 6 * MS_PER_DAY)
+function toTimelineDate(date: Date) {
+  return timelineDate(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function addTimelineMonths(date: Date, months: number) {
+  return timelineDate(date.getUTCFullYear(), date.getUTCMonth() + months, date.getUTCDate())
+}
+
+function timelineMonthKey(date: Date) {
+  return date.getUTCFullYear() * 12 + date.getUTCMonth()
+}
+
+function daysBetween(start: Date, end: Date) {
+  return Math.max(1, Math.round((end.getTime() - start.getTime()) / MS_PER_DAY))
+}
+
+function monthsBetweenInclusive(start: Date, end: Date) {
+  return Math.max(2, timelineMonthKey(end) - timelineMonthKey(start) + 1)
+}
+
+function defaultChartWindow(monthCount: number) {
+  return {
+    start: timelineDate(TIMELINE_START_YEAR, TIMELINE_START_MONTH, 1),
+    end: timelineDate(TIMELINE_START_YEAR, TIMELINE_START_MONTH + monthCount - 1, 1),
+  }
+}
+
+function selectedChartWindow(start: Date, end: Date) {
+  const rangeStart = toTimelineDate(start)
+  const rangeEnd = toTimelineDate(end)
+  return rangeStart.getTime() <= rangeEnd.getTime()
+    ? { start: rangeStart, end: rangeEnd }
+    : { start: rangeEnd, end: rangeStart }
+}
+
+function pointCountForWindow(start: Date, end: Date) {
+  return clamp(monthsBetweenInclusive(start, end), 2, SERIES[0].values.length)
+}
+
+function valuesForPointCount(values: number[], pointCount: number) {
+  if (pointCount <= values.length) return values.slice(0, pointCount)
+
+  return Array.from({ length: pointCount }, (_, index) => values[index % values.length])
+}
+
+function positionForDate(date: Date, start: Date, end: Date) {
+  return PLOT.left + ((date.getTime() - start.getTime()) / Math.max(1, end.getTime() - start.getTime())) * PLOT.width
+}
+
+function dateLabelFor(date: Date, includeDay: boolean) {
+  const month = MONTH_LABELS[date.getUTCMonth()]
+  return includeDay ? `${month} ${date.getUTCDate()}` : month
+}
+
+function axisLabelForDate(date: Date, start: Date, end: Date, key: string, includeDay: boolean): AxisLabel {
+  return {
+    key,
+    label: dateLabelFor(date, includeDay),
+    year: date.getUTCFullYear(),
+    position: clamp(positionForDate(date, start, end), PLOT.left, PLOT.left + PLOT.width),
+  }
+}
+
+function weekRangeForX(x: number, start: Date, end: Date) {
+  const progress = clamp((x - PLOT.left) / PLOT.width, 0, 1)
+  const currentDate = new Date(start.getTime() + progress * (end.getTime() - start.getTime()))
+  const dayOffset = Math.floor((currentDate.getTime() - start.getTime()) / MS_PER_DAY)
+  const weekStart = new Date(start.getTime() + Math.floor(dayOffset / 7) * 7 * MS_PER_DAY)
+
+  return formatWeekRangeFromDate(weekStart)
+}
+
+function formatWeekRangeFromDate(start: Date) {
+  const rangeEnd = new Date(start.getTime() + 6 * MS_PER_DAY)
   const startMonth = MONTH_LABELS[start.getUTCMonth()]
-  const endMonth = MONTH_LABELS[end.getUTCMonth()]
+  const endMonth = MONTH_LABELS[rangeEnd.getUTCMonth()]
   const startDay = start.getUTCDate()
-  const endDay = end.getUTCDate()
+  const endDay = rangeEnd.getUTCDate()
 
   return startMonth === endMonth ? `${startMonth} ${startDay} - ${endDay}` : `${startMonth} ${startDay} - ${endMonth} ${endDay}`
+}
+
+function dateAtTimelineOffset(dayOffset: number) {
+  return new Date(Date.UTC(TIMELINE_START_YEAR, TIMELINE_START_MONTH, 1 + dayOffset))
+}
+
+type AxisLabel = {
+  key: string
+  label: string
+  year: number
+  position: number
+  priority?: number
+}
+
+function dateAxisLabels(visibleCount: number, intervalDays: number): AxisLabel[] {
+  const start = Date.UTC(TIMELINE_START_YEAR, TIMELINE_START_MONTH, 1)
+  const end = Date.UTC(TIMELINE_START_YEAR, TIMELINE_START_MONTH + visibleCount - 1, 1)
+  const totalDays = Math.max(1, Math.round((end - start) / MS_PER_DAY))
+  const dayOffsets: number[] = []
+
+  for (let day = 0; day < totalDays; day += intervalDays) {
+    dayOffsets.push(day)
+  }
+
+  if (dayOffsets[dayOffsets.length - 1] !== totalDays) {
+    const lastGap = totalDays - dayOffsets[dayOffsets.length - 1]
+    if (lastGap < intervalDays * 0.6) {
+      dayOffsets.pop()
+    }
+    dayOffsets.push(totalDays)
+  }
+
+  return dayOffsets.map((dayOffset) => {
+    const date = dateAtTimelineOffset(dayOffset)
+    return {
+      key: `date-${dayOffset}`,
+      label: `${MONTH_LABELS[date.getUTCMonth()]} ${date.getUTCDate()}`,
+      year: date.getUTCFullYear(),
+      position: PLOT.left + (dayOffset / totalDays) * PLOT.width,
+    }
+  })
+}
+
+function monthAxisLabelAt(month: string, index: number, total: number, priority = 0): AxisLabel {
+  const absoluteMonth = TIMELINE_START_MONTH + index
+  const isEdgeLabel = index === 0 || index === total - 1
+
+  return {
+    key: `${month}-${index}`,
+    label: month,
+    year: TIMELINE_START_YEAR + Math.floor(absoluteMonth / 12),
+    position: xAt(index, total),
+    priority: isEdgeLabel ? 3 : priority,
+  }
+}
+
+function steppedMonthAxisLabels(visibleMonths: string[], interval: number): AxisLabel[] {
+  const indexes: number[] = []
+  const lastIndex = visibleMonths.length - 1
+
+  for (let index = 0; index < visibleMonths.length; index += interval) {
+    indexes.push(index)
+  }
+
+  if (indexes[indexes.length - 1] !== lastIndex) {
+    const lastGap = lastIndex - indexes[indexes.length - 1]
+    if (lastGap < 2) {
+      indexes[indexes.length - 1] = lastIndex
+    } else {
+      indexes.push(lastIndex)
+    }
+  }
+
+  const labels = indexes.map((index) => monthAxisLabelAt(visibleMonths[index], index, visibleMonths.length))
+  const lastLabelIndex = labels.length - 1
+
+  return labels.map((label, index) => ({
+    ...label,
+    position: PLOT.left + (lastLabelIndex <= 0 ? 0 : (index / lastLabelIndex) * PLOT.width),
+  }))
+}
+
+function monthAxisLabels(visibleMonths: string[], labelStep: number): AxisLabel[] {
+  const labels = visibleMonths.flatMap((month, index) => {
+    const absoluteMonth = TIMELINE_START_MONTH + index
+    const isYearAnchor = index === 0 || absoluteMonth % 12 === 0
+    if (index % labelStep !== 0 && index !== visibleMonths.length - 1 && !isYearAnchor) return []
+    return [monthAxisLabelAt(month, index, visibleMonths.length, isYearAnchor ? 2 : 0)]
+  })
+
+  return spacedAxisLabels(labels, labelStep > 1 ? 88 : 64)
+}
+
+function spacedAxisLabels(labels: AxisLabel[], minGap: number) {
+  const selected: AxisLabel[] = []
+  const candidates = [...labels].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.position - b.position)
+
+  candidates.forEach((candidate) => {
+    const hasCollision = selected.some((label) => Math.abs(label.position - candidate.position) < minGap)
+    if (!hasCollision) {
+      selected.push(candidate)
+    }
+  })
+
+  return selected.sort((a, b) => a.position - b.position)
+}
+
+function axisLabelsForRange(range: RangeOption, visibleMonths: string[], labelStep: number) {
+  if (range === "1M") return dateAxisLabels(visibleMonths.length, 7)
+  if (range === "3M") return dateAxisLabels(visibleMonths.length, 14)
+  if (range === "1.5Y") return steppedMonthAxisLabels(visibleMonths, 2)
+  if (range === "2Y" || range === "All") return steppedMonthAxisLabels(visibleMonths, 3)
+  return monthAxisLabels(visibleMonths, labelStep)
+}
+
+function customDateAxisLabels(start: Date, end: Date): AxisLabel[] {
+  const totalDays = daysBetween(start, end)
+  if (totalDays <= 110) {
+    const intervalDays = totalDays <= 45 ? 7 : 14
+    const offsets: number[] = []
+    for (let day = 0; day < totalDays; day += intervalDays) offsets.push(day)
+    if (offsets[offsets.length - 1] !== totalDays) {
+      const lastGap = totalDays - offsets[offsets.length - 1]
+      if (lastGap < intervalDays * 0.6) offsets.pop()
+      offsets.push(totalDays)
+    }
+
+    return offsets.map((offset) => {
+      const date = new Date(start.getTime() + offset * MS_PER_DAY)
+      return axisLabelForDate(date, start, end, `custom-day-${offset}`, true)
+    })
+  }
+
+  const totalMonths = monthsBetweenInclusive(start, end)
+  const intervalMonths = totalMonths <= 12 ? 1 : totalMonths <= 24 ? 2 : 3
+  const labels: AxisLabel[] = [axisLabelForDate(start, start, end, "custom-start", start.getUTCDate() !== 1)]
+  const firstMonth = timelineDate(start.getUTCFullYear(), start.getUTCMonth() + 1, 1)
+
+  for (let date = firstMonth, index = 1; date.getTime() < end.getTime(); date = addTimelineMonths(date, intervalMonths), index += 1) {
+    labels.push(axisLabelForDate(date, start, end, `custom-month-${index}`, false))
+  }
+
+  const endLabel = axisLabelForDate(end, start, end, "custom-end", end.getUTCDate() !== 1)
+  const lastLabel = labels[labels.length - 1]
+  if (lastLabel && Math.abs(lastLabel.position - endLabel.position) < 64) labels.pop()
+  labels.push(endLabel)
+
+  return spacedAxisLabels(labels, 64)
+}
+
+const DATE_LABEL_FMT = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" })
+
+/** the date-picker trigger label: "Date range" empty, one date, or a start - end pair */
+function formatDateRange(range: { start: Date | null; end: Date | null }) {
+  if (!range.start) return "Date range"
+  if (!range.end) return DATE_LABEL_FMT.format(range.start)
+  return `${DATE_LABEL_FMT.format(range.start)} - ${DATE_LABEL_FMT.format(range.end)}`
 }
 
 function valueFromY(y: number) {
@@ -198,18 +414,36 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
   const [selectedRange, setSelectedRange] = useState<RangeOption>("1Y")
   const [selectedGraph, setSelectedGraph] = useState<GraphFilterId>("all")
   const [graphOpen, setGraphOpen] = useState(false)
+  const [dateOpen, setDateOpen] = useState(false)
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null })
+  const dateFilterRef = useRef<HTMLDivElement>(null)
   const [hoverX, setHoverX] = useState<number | null>(null)
+  // the color/gray split boundary. While hovering it tracks the cursor; on leave
+  // it animates out to the right edge so the color sweeps back in smoothly.
+  const [sweepX, setSweepX] = useState<number | null>(null)
+  const sweepRaf = useRef<number | undefined>(undefined)
   const graphFilterRef = useRef<HTMLDivElement>(null)
 
-  // the range control drives the visible window: show the first N months
-  const visibleCount = RANGE_MONTHS[selectedRange]
+  const fallbackVisibleCount = RANGE_MONTHS[selectedRange]
+  const rangeStart = dateRange.start
+  const rangeEnd = dateRange.end
+  const dateRangeComplete = rangeStart != null && rangeEnd != null
+  const chartWindow = dateRangeComplete
+    ? selectedChartWindow(rangeStart, rangeEnd)
+    : defaultChartWindow(fallbackVisibleCount)
+  const visibleCount = dateRangeComplete ? pointCountForWindow(chartWindow.start, chartWindow.end) : fallbackVisibleCount
   const visibleMonths = MONTHS.slice(0, visibleCount)
   const selectedGraphOption = GRAPH_FILTERS.find((filter) => filter.id === selectedGraph) ?? GRAPH_FILTERS[0]
   const activeSeries = selectedGraph === "all" ? SERIES : SERIES.filter((series) => series.id === selectedGraph)
-  const visibleSeries = activeSeries.map((series) => ({ ...series, values: series.values.slice(0, visibleCount) }))
+  const visibleSeries = activeSeries.map((series) => ({ ...series, values: valuesForPointCount(series.values, visibleCount) }))
   const labelStep = visibleCount > 14 ? 2 : 1
-  const hoverWeekRange = hoverX == null ? null : weekRangeForX(hoverX, visibleCount)
+  const xAxisLabels = dateRangeComplete
+    ? customDateAxisLabels(chartWindow.start, chartWindow.end)
+    : axisLabelsForRange(selectedRange, visibleMonths, labelStep)
+  const hoverWeekRange = hoverX == null ? null : weekRangeForX(hoverX, chartWindow.start, chartWindow.end)
   const tooltipOnLeft = hoverX != null && hoverX > PLOT.left + PLOT.width - TOOLTIP_WIDTH - 24
+  // the split boundary: cursor while hovering, else the return-sweep position
+  const maskX = hoverX ?? sweepX
 
   useEffect(() => {
     if (!graphOpen) return
@@ -234,10 +468,81 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
     }
   }, [graphOpen])
 
+  useEffect(() => {
+    if (!dateOpen) return
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!dateFilterRef.current?.contains(event.target as Node)) {
+        setDateOpen(false)
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setDateOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [dateOpen])
+
+  useEffect(
+    () => () => {
+      if (sweepRaf.current != null) cancelAnimationFrame(sweepRaf.current)
+    },
+    [],
+  )
+
+  function stopSweep() {
+    if (sweepRaf.current != null) cancelAnimationFrame(sweepRaf.current)
+    sweepRaf.current = undefined
+  }
+
+  // hide everything at once (range/graph switch): no sweep, just clear
+  function clearHover() {
+    stopSweep()
+    setSweepX(null)
+    setHoverX(null)
+  }
+
+  // on leave, glide the color/gray boundary out to the right edge (easeOutCubic)
+  // so the chart fills back to full color instead of snapping
+  function startReturnSweep(fromX: number) {
+    stopSweep()
+    const rightEdge = PLOT.left + PLOT.width
+    const distance = rightEdge - fromX
+    if (distance <= 0.5) {
+      setSweepX(null)
+      return
+    }
+    const duration = 320
+    const startTime = performance.now()
+    const step = (now: number) => {
+      const t = Math.min(1, (now - startTime) / duration)
+      const eased = 1 - (1 - t) ** 3
+      setSweepX(fromX + distance * eased)
+      if (t < 1) {
+        sweepRaf.current = requestAnimationFrame(step)
+      } else {
+        sweepRaf.current = undefined
+        setSweepX(null)
+      }
+    }
+    sweepRaf.current = requestAnimationFrame(step)
+  }
+
   function handleChartPointerMove(event: PointerEvent<SVGRectElement>) {
     const svg = event.currentTarget.ownerSVGElement
     if (!svg) return
 
+    // re-entering cancels any in-flight return sweep
+    stopSweep()
+    setSweepX(null)
     const rect = svg.getBoundingClientRect()
     const pointerX = ((event.clientX - rect.left) / rect.width) * SVG_WIDTH
     setHoverX(clamp(pointerX, PLOT.left, PLOT.left + PLOT.width))
@@ -264,7 +569,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
       </header>
 
       <div className="flex h-[526px] flex-col gap-8 p-3">
-        <div className="flex h-[26px] items-center justify-between">
+        <div className="relative flex h-[26px] items-center justify-between">
           <div className="flex items-center gap-2">
             <SegmentedButton
               fill
@@ -273,7 +578,8 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
               value={selectedRange}
               onChange={(v) => {
                 setSelectedRange(v as RangeOption)
-                setHoverX(null)
+                setDateRange({ start: null, end: null })
+                clearHover()
               }}
               options={RANGE_OPTIONS.map((o) => ({ value: o, label: o }))}
             />
@@ -284,7 +590,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                 aria-expanded={graphOpen}
                 onClick={() => setGraphOpen((open) => !open)}
                 className={cn(
-                  "flex h-[26px] items-center justify-center gap-1 rounded-[6px] border-[0.5px] border-black/10 bg-white px-2.5 py-1 text-xs leading-[14px] font-normal text-primary shadow-[inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.2),inset_0_0.5px_0.5px_0_rgba(255,255,255,0.25)] hover:border-black/30",
+                  "flex h-[26px] items-center justify-center gap-1 whitespace-nowrap rounded-[6px] border-[0.5px] border-black/10 bg-white px-2.5 py-1 text-xs leading-[14px] font-normal text-primary shadow-[inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.2),inset_0_0.5px_0.5px_0_rgba(255,255,255,0.25)] hover:border-black/30",
                   graphOpen && "border-black/30",
                 )}
               >
@@ -320,13 +626,50 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                         onClick={() => {
                           setSelectedGraph(filter.id)
                           setGraphOpen(false)
-                          setHoverX(null)
+                          clearHover()
                         }}
                       >
                         {filter.label}
                       </ListBase>
                     )
                   })}
+                </div>
+              )}
+            </div>
+
+            <div ref={dateFilterRef} className="relative shrink-0">
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={dateOpen}
+                onClick={() => setDateOpen((open) => !open)}
+                className={cn(
+                  "flex h-[26px] items-center justify-center gap-1 whitespace-nowrap rounded-[6px] border-[0.5px] border-black/10 bg-white px-2.5 py-1 text-xs leading-[14px] font-normal text-primary shadow-[inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.2),inset_0_0.5px_0.5px_0_rgba(255,255,255,0.25)] hover:border-black/30",
+                  dateOpen && "border-black/30",
+                )}
+              >
+                <Calendar className="size-3 shrink-0 text-primary" />
+                {formatDateRange(dateRange)}
+                <ChevronDown size={12} className={cn("text-primary", dateOpen && "rotate-180")} />
+              </button>
+              {dateOpen && (
+                <div className="absolute left-0 top-full z-30 mt-1">
+                  <DatePicker
+                    variant="range"
+                    defaultMonth={dateRange.start ?? undefined}
+                    range={dateRange}
+                    defaultRange={dateRange}
+                    onApplyRange={(range) => {
+                      setDateRange(range)
+                      setDateOpen(false)
+                      clearHover()
+                    }}
+                    onClearRange={() => {
+                      setDateRange({ start: null, end: null })
+                      setDateOpen(false)
+                      clearHover()
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -347,15 +690,24 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
               ))}
 
               <div className="absolute bottom-0 left-0 right-0 h-[13px]">
-                {visibleMonths.map((month, index) => {
-                  if (index % labelStep !== 0 && index !== visibleMonths.length - 1) return null
+                {xAxisLabels.map((axisLabel, index) => {
+                  const isFirstLabel = index === 0
+                  const isLastLabel = index === xAxisLabels.length - 1
+                  const position = (axisLabel.position / SVG_WIDTH) * 100
+                  const positionStyle = isLastLabel ? { right: `${100 - position}%` } : { left: `${position}%` }
                   return (
                     <span
-                      key={`${month}-${index}`}
-                      className="absolute top-0 -translate-x-1/2 whitespace-nowrap text-[11px] leading-[13px] font-normal text-secondary"
-                      style={{ left: `${(xAt(index, visibleMonths.length) / SVG_WIDTH) * 100}%` }}
+                      key={axisLabel.key}
+                      className={cn(
+                        "absolute top-0 whitespace-nowrap text-[11px] leading-[13px] font-normal text-secondary",
+                        isFirstLabel && "text-left",
+                        isLastLabel && "text-right",
+                        !isFirstLabel && !isLastLabel && "-translate-x-1/2 text-center",
+                      )}
+                      style={positionStyle}
                     >
-                      {month}
+                      {axisLabel.label}
+                      <span className="text-[#8f8f8f]">{` '${String(axisLabel.year).slice(-2)}`}</span>
                     </span>
                   )
                 })}
@@ -365,26 +717,30 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
               viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
               className="absolute inset-0 h-full w-full overflow-visible"
               role="img"
-              aria-label={`Forecast worker need line chart over the next ${visibleCount} months`}
+              aria-label={
+                dateRangeComplete
+                  ? `Forecast worker need line chart from ${DATE_LABEL_FMT.format(chartWindow.start)} to ${DATE_LABEL_FMT.format(chartWindow.end)}`
+                  : `Forecast worker need line chart over the next ${visibleCount} months`
+              }
               preserveAspectRatio="none"
             >
               <defs>
                 {SERIES.map((series) => (
                   <linearGradient key={series.id} id={`${series.id}-area`} x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor={series.color} stopOpacity="0.16" />
-                    <stop offset="100%" stopColor={series.color} stopOpacity="0.04" />
+                    <stop offset="0%" stopColor={series.color} stopOpacity="0.08" />
+                    <stop offset="100%" stopColor={series.color} stopOpacity="0.02" />
                   </linearGradient>
                 ))}
-                {hoverX != null && (
+                {maskX != null && (
                   <>
                     <clipPath id="forecast-left-mask">
-                      <rect x={PLOT.left} y={PLOT.top} width={hoverX - PLOT.left} height={PLOT.height} />
+                      <rect x={PLOT.left} y={PLOT.top} width={maskX - PLOT.left} height={PLOT.height} />
                     </clipPath>
                     <clipPath id="forecast-right-mask">
                       <rect
-                        x={hoverX}
+                        x={maskX}
                         y={PLOT.top}
-                        width={PLOT.left + PLOT.width - hoverX}
+                        width={PLOT.left + PLOT.width - maskX}
                         height={PLOT.height}
                       />
                     </clipPath>
@@ -412,7 +768,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                   d={areaPath(series.values)}
                   fill={`url(#${series.id}-area)`}
                   opacity={series.id === "assigned" ? 0.75 : 1}
-                  clipPath={hoverX != null ? "url(#forecast-left-mask)" : undefined}
+                  clipPath={maskX != null ? "url(#forecast-left-mask)" : undefined}
                 />
               ))}
 
@@ -422,21 +778,21 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                 y1={yAt(127)}
                 y2={yAt(127)}
                 stroke="#e51d31"
-                strokeWidth="1"
+                strokeWidth="1.5"
                 strokeDasharray="7 7"
                 vectorEffect="non-scaling-stroke"
-                clipPath={hoverX != null ? "url(#forecast-left-mask)" : undefined}
+                clipPath={maskX != null ? "url(#forecast-left-mask)" : undefined}
               />
               <line
                 x1={PLOT.left}
                 x2={PLOT.left + PLOT.width}
                 y1={yAt(97)}
                 y2={yAt(97)}
-                stroke="#129457"
-                strokeWidth="1"
+                stroke="#0e7847"
+                strokeWidth="1.5"
                 strokeDasharray="7 7"
                 vectorEffect="non-scaling-stroke"
-                clipPath={hoverX != null ? "url(#forecast-left-mask)" : undefined}
+                clipPath={maskX != null ? "url(#forecast-left-mask)" : undefined}
               />
 
               {visibleSeries.map((series) => (
@@ -445,15 +801,15 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                   d={smoothPath(pointsFor(series.values))}
                   fill="none"
                   stroke={series.color}
-                  strokeWidth="1.1"
+                  strokeWidth="0.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   vectorEffect="non-scaling-stroke"
-                  clipPath={hoverX != null ? "url(#forecast-left-mask)" : undefined}
+                  clipPath={maskX != null ? "url(#forecast-left-mask)" : undefined}
                 />
               ))}
 
-              {hoverX != null && (
+              {maskX != null && (
                 <>
                   <line
                     x1={PLOT.left}
@@ -461,7 +817,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                     y1={yAt(127)}
                     y2={yAt(127)}
                     stroke="#e51d31"
-                    strokeWidth="1"
+                    strokeWidth="1.5"
                     strokeDasharray="7 7"
                     vectorEffect="non-scaling-stroke"
                     clipPath="url(#forecast-right-mask)"
@@ -472,8 +828,8 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                     x2={PLOT.left + PLOT.width}
                     y1={yAt(97)}
                     y2={yAt(97)}
-                    stroke="#129457"
-                    strokeWidth="1"
+                    stroke="#0e7847"
+                    strokeWidth="1.5"
                     strokeDasharray="7 7"
                     vectorEffect="non-scaling-stroke"
                     clipPath="url(#forecast-right-mask)"
@@ -485,7 +841,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                       d={smoothPath(pointsFor(series.values))}
                       fill="none"
                       stroke={RIGHT_CHART_LINE_COLOR}
-                      strokeWidth="1.1"
+                      strokeWidth="0.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       vectorEffect="non-scaling-stroke"
@@ -505,7 +861,10 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                 pointerEvents="all"
                 style={{ cursor: "crosshair" }}
                 onPointerMove={handleChartPointerMove}
-                onPointerLeave={() => setHoverX(null)}
+                onPointerLeave={() => {
+                  if (hoverX != null) startReturnSweep(hoverX)
+                  setHoverX(null)
+                }}
               />
             </svg>
             {hoverX != null && (
@@ -524,7 +883,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                   return (
                     <span
                       key={`${series.id}-hover-marker`}
-                      className="absolute rounded-full border border-white"
+                      className="absolute rounded-full"
                       style={{
                         width: HOVER_MARKER_SIZE,
                         height: HOVER_MARKER_SIZE,
@@ -538,11 +897,14 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                 {hoverWeekRange != null && (
                   <ChartTooltip
                     title={hoverWeekRange}
-                    items={visibleSeries.map((series) => ({
-                      color: series.color,
-                      label: series.label,
-                      value: valueOnSmoothPath(series.values, hoverX),
-                    }))}
+                    items={visibleSeries
+                      .map((series) => ({
+                        color: series.color,
+                        label: series.label,
+                        value: valueOnSmoothPath(series.values, hoverX),
+                      }))
+                      // rank rows by value at the cursor, highest first
+                      .sort((a, b) => b.value - a.value)}
                     className="absolute top-3"
                     style={{
                       left: `calc(${(hoverX / SVG_WIDTH) * 100}% + ${tooltipOnLeft ? -TOOLTIP_WIDTH - 12 : 12}px)`,
@@ -557,8 +919,8 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
             {activeSeries.map((series) => (
               <Legend key={series.id} variant="square" color={series.color} label={series.label} />
             ))}
-            <Legend variant="line" color="#e51d31" label="Total workforce" />
-            <Legend variant="line" color="#129457" label="Carlton workforce" />
+            <Legend variant="line" color="#e51d31" label="Total workforce" lineStyle="dashed" />
+            <Legend variant="line" color="#0e7847" label="Carlton workforce" lineStyle="dashed" />
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ChevronDown, ChevronRight, ChevronSelectorVertical, ChevronUp } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
+import { OverlayScrollArea } from "@/components/overlay-scroll-area"
 import { SearchField } from "@/components/search-field"
 import { Legend } from "@/components/legend"
 import { ProgressValueBar } from "@/components/progress-value-bar"
@@ -92,7 +93,6 @@ const PROJECTED_JOBS = [
   { name: "Carlton Workforce Yard", operationHours: 520, planningHours: 610 },
   { name: "Redstone HVAC Phase 2", operationHours: 3650, planningHours: 2920 },
   { name: "Summit Lab Renovation", operationHours: 1460, planningHours: 1390 },
-  { name: "Aurora Safety Vestibule", operationHours: 980, planningHours: 1210 },
 ]
 
 const HOUR_FORMATTER = new Intl.NumberFormat("en-US")
@@ -157,10 +157,11 @@ function Panel({
   )
 }
 
+
 function PhaseBreakdown({ id, phases }: { id: string; phases: ReturnType<typeof phasesFor> }) {
   return (
-    <div id={id} className="border-t-[0.5px] border-black/10 pt-3">
-      <h4 className="mb-2 text-[11px] leading-[15px] font-medium text-[#8f8f8f]">
+    <div id={id} className="mt-1">
+      <h4 className="mb-3 text-[12px] leading-[16px] font-medium text-[#8f8f8f]">
         Hours by phase — Actual vs Projected
       </h4>
       <div className="flex flex-col gap-3">
@@ -222,8 +223,7 @@ function NeedsJobRow({
         }
       }}
       className={cn(
-        "flex cursor-pointer flex-col gap-3 border-b-[0.5px] border-black/10 px-3 pt-3 outline-none transition-colors hover:bg-black/[0.03] focus-visible:bg-black/[0.03] focus-visible:ring-1 focus-visible:ring-black/20",
-        expanded ? "pb-4" : "h-[134px] pb-5",
+        "flex cursor-pointer flex-col gap-3 border-b-[0.5px] border-black/10 px-3 pt-3 pb-3 outline-none transition-colors last:border-b-0 hover:bg-black/[0.03] focus-visible:bg-black/[0.03] focus-visible:ring-1 focus-visible:ring-black/20",
       )}
     >
       <div className="flex h-[38px] items-center justify-between gap-2">
@@ -259,6 +259,15 @@ function NeedsJobRow({
         />
       </div>
       {expanded && <PhaseBreakdown id={phaseRegionId} phases={phasesFor(job)} />}
+      {/* always-visible expand affordance at the bottom of every card */}
+      <div className="flex items-center justify-center gap-1 text-[10px] leading-[14px] font-normal text-[#525252]">
+        {expanded ? "Hide details" : "See details"}
+        <ChevronDown
+          size={12}
+          aria-hidden="true"
+          className={cn("transition-transform", expanded && "rotate-180")}
+        />
+      </div>
     </article>
   )
 }
@@ -295,7 +304,7 @@ function ProjectedRow({ job }: { job: (typeof PROJECTED_JOBS)[number] }) {
   const isPositive = delta >= 0
 
   return (
-    <div className="grid h-[50px] grid-cols-[160px_120px_minmax(0,1fr)] border-b-[0.5px] border-black/10 bg-white">
+    <div className="grid h-[50px] grid-cols-[160px_120px_minmax(0,1fr)] border-b-[0.5px] border-black/10 bg-white last:border-b-0">
       <div className="flex min-w-0 items-center px-4 py-2">
         <span className="truncate text-xs leading-4 font-normal text-[#525252]">{job.name}</span>
       </div>
@@ -369,10 +378,7 @@ function JobsTimePhasedPanel() {
   return (
     <Panel title="Jobs Time-Phased Value & Needs" action="Open Jobs Cards">
       <div className="relative flex h-[660px] flex-col pb-3">
-        <div
-          tabIndex={0}
-          className="h-[609px] overflow-y-auto overscroll-contain outline-none scrollbar-hide"
-        >
+        <OverlayScrollArea wrapperClassName="flex-1" className="h-full">
           {NEEDS_JOBS.map((job) => (
             <NeedsJobRow
               key={job.name}
@@ -381,8 +387,8 @@ function JobsTimePhasedPanel() {
               onToggle={() => setExpandedJob((current) => (current === job.name ? null : job.name))}
             />
           ))}
-        </div>
-        <div className="mx-3 mt-3 border-t-[0.5px] border-[#d6d6d6] pt-3">
+        </OverlayScrollArea>
+        <div className="mx-3 border-t-[0.5px] border-[#d6d6d6] pt-3">
           <p className="text-[11px] leading-[15px] font-normal text-[#525252]">
             {NEEDS_JOBS.length} jobs with forecast needs this week
           </p>
@@ -502,7 +508,7 @@ function ForecastProjectedPanel() {
             </span>
           </div>
 
-          <div className="relative h-[596px] overflow-hidden">
+          <div className="relative h-[553px] overflow-visible">
             <div className="grid h-8 grid-cols-[160px_120px_minmax(0,1fr)] bg-[#fafafa]">
               <button
                 type="button"
@@ -522,10 +528,7 @@ function ForecastProjectedPanel() {
                 Operation vs Planning
               </div>
             </div>
-            <div
-              tabIndex={0}
-              className="h-[564px] overflow-y-auto overscroll-contain outline-none scrollbar-hide"
-            >
+            <OverlayScrollArea className="h-[533px]" scrollbarRight={-7}>
               {sortedJobs.length > 0 ? (
                 sortedJobs.map((job) => <ProjectedRow key={job.name} job={job} />)
               ) : (
@@ -533,7 +536,7 @@ function ForecastProjectedPanel() {
                   No projects match &ldquo;{query}&rdquo;
                 </p>
               )}
-            </div>
+            </OverlayScrollArea>
           </div>
         </div>
         <div className="mt-3 border-t-[0.5px] border-[#d6d6d6] pt-3">
