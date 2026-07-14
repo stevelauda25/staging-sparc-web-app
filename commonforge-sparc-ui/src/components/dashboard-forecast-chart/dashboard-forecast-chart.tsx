@@ -787,7 +787,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                 x2={PLOT.left + PLOT.width}
                 y1={yAt(97)}
                 y2={yAt(97)}
-                stroke="#0e7847"
+                stroke="#1fb06b"
                 strokeWidth="1.5"
                 strokeDasharray="7 7"
                 vectorEffect="non-scaling-stroke"
@@ -827,7 +827,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                     x2={PLOT.left + PLOT.width}
                     y1={yAt(97)}
                     y2={yAt(97)}
-                    stroke="#0e7847"
+                    stroke="#1fb06b"
                     strokeWidth="1.5"
                     strokeDasharray="7 7"
                     vectorEffect="non-scaling-stroke"
@@ -919,7 +919,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
               <Legend key={series.id} variant="square" color={series.color} label={series.label} />
             ))}
             <Legend variant="line" color="#e51d31" label="Total workforce" lineStyle="dashed" />
-            <Legend variant="line" color="#0e7847" label="Carlton workforce" lineStyle="dashed" />
+            <Legend variant="line" color="#1fb06b" label="Carlton workforce" lineStyle="dashed" />
           </div>
         </div>
       </div>

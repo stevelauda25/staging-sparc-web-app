@@ -33,12 +33,23 @@ function LegendSwatch({
   bordered,
 }: Pick<LegendProps, "variant" | "color" | "dashed" | "lineStyle" | "bordered">) {
   if (variant === "line") {
+    // SVG stroke (not a CSS border) so the weight and dash count are exact: a
+    // bold 2px line showing two clear dashes across the swatch
+    const style = lineStyle ?? (dashed ? "dashed" : "solid")
+    const dashArray = style === "dotted" ? "1.5 3" : style === "dashed" ? "6 4" : undefined
     return (
-      <span
-        aria-hidden="true"
-        className="h-px w-3.5 shrink-0 border-t"
-        style={{ borderColor: color, borderTopStyle: lineStyle ?? (dashed ? "dashed" : "solid") }}
-      />
+      <svg aria-hidden="true" width="16" height="2" viewBox="0 0 16 2" className="shrink-0 overflow-visible">
+        <line
+          x1="0"
+          y1="1"
+          x2="16"
+          y2="1"
+          stroke={color}
+          strokeWidth="2"
+          strokeDasharray={dashArray}
+          strokeLinecap={style === "dotted" ? "round" : "butt"}
+        />
+      </svg>
     )
   }
   return (

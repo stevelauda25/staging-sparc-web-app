@@ -34,7 +34,7 @@ export function DashboardFrame({
       <div
         data-node-id="2533:3619"
         className={cn(
-          "relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md bg-surface ring-[0.5px] ring-black/10",
+          "relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md bg-surface ring-[0.5px] ring-black/20",
           "shadow-[0_1px_2px_-1px_rgba(0,0,0,0.2),0_2px_4px_-2px_rgba(0,0,0,0.15),0_4px_6px_-4px_rgba(0,0,0,0.1)]",
           "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[inset_0_0.5px_0.5px_0_rgba(255,255,255,0.1),inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.1)]",
         )}
@@ -42,7 +42,7 @@ export function DashboardFrame({
         <header
           data-node-id="2533:3620"
           className={cn(
-            "relative z-30 flex h-10 shrink-0 items-center gap-1 rounded-t-md bg-surface pr-3 shadow-[inset_0_-0.5px_0_rgba(0,0,0,0.1)] motion-safe:transition-[padding] motion-safe:duration-200 motion-safe:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
+            "relative z-30 flex h-10 shrink-0 items-center gap-1 rounded-t-md bg-[#F7F7F7] pr-3 shadow-[inset_0_-0.5px_0_rgba(0,0,0,0.2)] motion-safe:transition-[padding] motion-safe:duration-200 motion-safe:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
             collapsed ? "pl-1.5" : "pl-3",
           )}
         >
@@ -53,7 +53,7 @@ export function DashboardFrame({
           {/* breadcrumb trail, Figma node 2533:3621 */}
           <Breadcrumb items={breadcrumb} />
         </header>
-        <div data-node-id="2533:3622" className="scrollbar-hide relative z-10 min-h-0 w-full flex-1 overflow-auto overscroll-none">
+        <div data-node-id="2533:3622" className="scrollbar-hide relative z-10 min-h-0 w-full flex-1 overflow-auto overscroll-none bg-[#F7F7F7]">
           {children}
         </div>
       </div>
