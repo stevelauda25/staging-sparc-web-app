@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { LayoutLeft } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { Breadcrumb, type BreadcrumbItem } from "@/components/breadcrumb"
 import { useShell, SidebarToggle } from "@/components/app-shell"
@@ -22,7 +23,7 @@ export function DashboardFrame({
   children,
   className,
 }: DashboardFrameProps) {
-  const { collapsed } = useShell()
+  const { collapsed, openMobileNav } = useShell()
   // the last breadcrumb entry is the current page; expose it as the page's h1 so
   // screen-reader users get a top-level heading (the breadcrumb shows it visually)
   const currentPage = breadcrumb[breadcrumb.length - 1]?.label ?? "Dashboard"
@@ -42,12 +43,21 @@ export function DashboardFrame({
         <header
           data-node-id="2533:3620"
           className={cn(
-            "relative z-30 flex h-10 shrink-0 items-center gap-1 rounded-t-md bg-[#F7F7F7] pr-3 shadow-[inset_0_-0.5px_0_rgba(0,0,0,0.2)] motion-safe:transition-[padding] motion-safe:duration-200 motion-safe:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
-            collapsed ? "pl-1.5" : "pl-3",
+            "relative z-30 flex h-10 shrink-0 items-center gap-1 rounded-t-md bg-[#F7F7F7] pl-1.5 pr-3 shadow-[inset_0_-0.5px_0_rgba(0,0,0,0.2)] motion-safe:transition-[padding] motion-safe:duration-200 motion-safe:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
+            !collapsed && "lg:pl-3",
           )}
         >
           <h1 className="sr-only">{currentPage}</h1>
-          {/* when collapsed the expand toggle lives here as a real header child, so
+          {/* below lg the sidebar is a drawer, opened by this hamburger */}
+          <button
+            type="button"
+            onClick={openMobileNav}
+            aria-label="Open navigation"
+            className="flex size-7 shrink-0 items-center justify-center rounded-md text-secondary outline-none hover:bg-[#F5F5F5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] lg:hidden"
+          >
+            <LayoutLeft className="size-4" />
+          </button>
+          {/* desktop-collapsed: the expand toggle lives here as a real header child, so
               it scrolls with the header rather than floating pinned over it */}
           {collapsed && <SidebarToggle />}
           {/* breadcrumb trail, Figma node 2533:3621 */}

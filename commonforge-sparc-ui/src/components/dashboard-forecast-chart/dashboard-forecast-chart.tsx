@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type PointerEvent } from "react"
-import { Calendar, ChevronDown, ChevronRight } from "@untitledui/icons"
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react"
+import { Calendar, ChevronDown, ChevronRight, LinkExternal01 } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { SegmentedButton } from "@/components/segmented-button"
 import { Legend } from "@/components/legend"
@@ -68,7 +68,10 @@ const RANGE_MONTHS: Record<RangeOption, number> = {
   "2Y": 24,
   All: 24,
 }
-const PLOT = { left: 40, top: 6.5, width: 1096, height: 363 }
+// The plot fills its column edge to edge (no internal side margins); the y-axis
+// numbers live in a fixed CSS gutter beside it and the x labels sit below it, each
+// held a constant 8px off the plot (see the render).
+const PLOT = { left: 0, top: 6.5, width: 1096, height: 363 }
 const SVG_WIDTH = PLOT.left + PLOT.width
 const SVG_HEIGHT = 397
 const MAX_Y = 220
@@ -296,6 +299,23 @@ function axisLabelsForRange(range: RangeOption, visibleMonths: string[], labelSt
   return monthAxisLabels(visibleMonths, labelStep)
 }
 
+// Thin axis labels to the plot's real width, keeping them EVENLY spaced. The SVG
+// stretches to its container, so a fixed SVG-space gap shrinks in real pixels on
+// narrow screens and the month labels collide. Keep every label while neighbours
+// clear `keepGapPx`; once that fails, drop to an evenly-spaced subset (first and
+// last always kept) sized to the wider `pickGapPx`, so labels never bunch unevenly.
+function fitAxisLabels(labels: AxisLabel[], plotWidthPx: number, keepGapPx: number, pickGapPx: number) {
+  if (plotWidthPx <= 0 || labels.length <= 2) return labels
+  const toPx = (position: number) => (position / SVG_WIDTH) * plotWidthPx
+  const allClear = labels.every(
+    (label, index) => index === 0 || toPx(label.position) - toPx(labels[index - 1].position) >= keepGapPx,
+  )
+  if (allClear) return labels
+  const count = Math.max(2, Math.floor(plotWidthPx / pickGapPx))
+  const picked = Array.from({ length: count }, (_, i) => labels[Math.round((i * (labels.length - 1)) / (count - 1))])
+  return picked.filter((label, index) => index === 0 || label.key !== picked[index - 1].key)
+}
+
 function customDateAxisLabels(start: Date, end: Date): AxisLabel[] {
   const totalDays = daysBetween(start, end)
   if (totalDays <= 110) {
@@ -423,6 +443,9 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
   const [sweepX, setSweepX] = useState<number | null>(null)
   const sweepRaf = useRef<number | undefined>(undefined)
   const graphFilterRef = useRef<HTMLDivElement>(null)
+  // the plot's rendered width, used to thin the x-axis labels so they never collide
+  const plotRef = useRef<HTMLDivElement>(null)
+  const [plotWidth, setPlotWidth] = useState(0)
 
   const fallbackVisibleCount = RANGE_MONTHS[selectedRange]
   const rangeStart = dateRange.start
@@ -440,6 +463,8 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
   const xAxisLabels = dateRangeComplete
     ? customDateAxisLabels(chartWindow.start, chartWindow.end)
     : axisLabelsForRange(selectedRange, visibleMonths, labelStep)
+  // drop crowded labels once we know the plot's real width (no-op on wide screens)
+  const displayLabels = fitAxisLabels(xAxisLabels, plotWidth, 52, 68)
   const hoverWeekRange = hoverX == null ? null : weekRangeForX(hoverX, chartWindow.start, chartWindow.end)
   const tooltipOnLeft = hoverX != null && hoverX > PLOT.left + PLOT.width - TOOLTIP_WIDTH - 24
   // the split boundary: cursor while hovering, else the return-sweep position
@@ -498,6 +523,31 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
     [],
   )
 
+  // Track the plot's rendered width so the x-axis labels can thin to fit it.
+  // The SVG stretches to its container, so we must re-thin whenever that width
+  // changes. ResizeObserver + resize cover real browsers; the interval is a cheap
+  // fallback for embedded webviews that reflow layout without emitting either
+  // event. setPlotWidth bails out when the width is unchanged, so idle ticks do
+  // not cause re-renders.
+  useLayoutEffect(() => {
+    const el = plotRef.current
+    if (!el) return
+    const measure = () => {
+      const width = el.clientWidth
+      setPlotWidth((prev) => (Math.abs(prev - width) > 1 ? width : prev))
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    window.addEventListener("resize", measure)
+    const poll = window.setInterval(measure, 250)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener("resize", measure)
+      window.clearInterval(poll)
+    }
+  }, [])
+
   function stopSweep() {
     if (sweepRaf.current != null) cancelAnimationFrame(sweepRaf.current)
     sweepRaf.current = undefined
@@ -552,7 +602,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
     <section
       data-node-id="forecast-worker-need-chart"
       className={cn(
-        "flex h-[570px] w-full flex-col overflow-hidden rounded-[6px] border-[0.5px] border-black/10 bg-white",
+        "flex w-full flex-col overflow-hidden rounded-[6px] border-[0.5px] border-black/10 bg-white md:h-[570px]",
         "shadow-[0_2px_6px_-4px_rgba(0,0,0,0.05),0_1px_3px_-2px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)]",
         className,
       )}
@@ -561,20 +611,28 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
         <h2 className="text-sm leading-5 font-medium text-primary">Forecast worker need</h2>
         <a
           href="#forecast-graph"
-          className="flex items-center gap-0.5 text-xs leading-4 font-normal text-secondary underline underline-offset-2"
+          className="hidden items-center gap-0.5 text-xs leading-4 font-normal text-secondary underline underline-offset-2 lg:flex"
         >
           Open Forecast Graph
           <ChevronRight size={14} className="text-secondary" />
         </a>
+        <a
+          href="#forecast-graph"
+          aria-label="Open Forecast Graph"
+          title="Open Forecast Graph"
+          className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-secondary outline-none hover:bg-[#f5f5f5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] lg:hidden"
+        >
+          <LinkExternal01 size={14} />
+        </a>
       </header>
 
-      <div className="flex h-[526px] flex-col gap-8 p-3">
-        <div className="relative flex h-[26px] items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-8 p-3 md:h-[526px]">
+        <div className="relative flex items-center md:h-[26px]">
+          <div className="flex w-full flex-wrap items-center gap-2">
             <SegmentedButton
               fill
               size="small"
-              className="w-[273px]"
+              className="w-full md:w-[273px]"
               value={selectedRange}
               onChange={(v) => {
                 setSelectedRange(v as RangeOption)
@@ -675,23 +733,36 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
           </div>
         </div>
 
-        <div className="flex h-[444px] flex-col items-center gap-6 pb-2">
-          <div className="relative h-[397px] w-full">
-            <div className="pointer-events-none absolute inset-0 z-10">
+        <div className="flex flex-col items-center gap-6 pb-2 md:h-[444px]">
+          {/* plot row: a fixed y-axis gutter + the plotting column. The gutter reserves
+              the value labels' space so they cannot overlap the plot once the SVG is
+              compressed on a narrow screen. The row is shorter on phones so the curves
+              read landscape rather than portrait; desktop keeps the Figma height. */}
+          <div className="flex h-[220px] w-full md:h-[397px]">
+            <div className="relative w-[29px] shrink-0">
               {Y_TICKS.map((tick, index) => (
                 <span
                   key={tick}
-                  className="absolute left-0 w-8 text-left text-[11px] leading-[13px] font-normal text-secondary"
-                  style={{ top: `${PLOT.top + index * 33 - 6}px` }}
+                  className={cn(
+                    // left-align the numbers; the 30px gutter = widest label (~22px) + 8px,
+                    // so the widest number clears the plot by 8px
+                    "absolute left-0 w-[29px] text-left text-[11px] leading-[13px] font-normal text-secondary",
+                    // phone: the plot is short, so label every 40 (drop the odd 20-steps:
+                    // 220/180/140/100/60/20) to keep the axis from crowding
+                    index % 2 === 0 && "hidden md:block",
+                  )}
+                  style={{ top: `calc(${(((PLOT.top + index * 33) / SVG_HEIGHT) * 100).toFixed(3)}% - 6px)` }}
                 >
                   {tick}
                 </span>
               ))}
-
-              <div className="absolute bottom-0 left-0 right-0 h-[13px]">
-                {xAxisLabels.map((axisLabel, index) => {
+            </div>
+            <div ref={plotRef} className="relative min-w-0 flex-1">
+              <div className="pointer-events-none absolute inset-0 z-10">
+                <div className="absolute left-0 right-0 top-[calc(93.07%_+_8px)] h-[13px]">
+                {displayLabels.map((axisLabel, index) => {
                   const isFirstLabel = index === 0
-                  const isLastLabel = index === xAxisLabels.length - 1
+                  const isLastLabel = index === displayLabels.length - 1
                   const position = (axisLabel.position / SVG_WIDTH) * 100
                   const positionStyle = isLastLabel ? { right: `${100 - position}%` } : { left: `${position}%` }
                   return (
@@ -912,9 +983,10 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                 )}
               </div>
             )}
+            </div>
           </div>
 
-          <div aria-label="Forecast chart legend" className="flex h-[15px] items-center justify-center gap-5">
+          <div aria-label="Forecast chart legend" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:h-[15px] md:gap-5">
             {activeSeries.map((series) => (
               <Legend key={series.id} variant="square" color={series.color} label={series.label} />
             ))}

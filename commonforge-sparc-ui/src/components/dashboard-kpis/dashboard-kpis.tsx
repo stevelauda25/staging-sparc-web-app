@@ -52,7 +52,7 @@ export function DashboardKpiGroup({
           label={item.label}
           value={item.value}
           description={item.description}
-          className="min-w-0 flex-1 basis-0"
+          className="min-w-0 md:flex-1 md:basis-0"
         />
       ))}
     </section>

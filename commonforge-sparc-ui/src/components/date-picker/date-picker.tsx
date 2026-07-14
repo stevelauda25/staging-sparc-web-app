@@ -272,7 +272,7 @@ export function DatePicker({
     }
     return (
       <div className={cn(cardClass, "flex-col")}>
-        <div className="flex">
+        <div className="flex flex-col divide-y divide-[#ebebeb] sm:flex-row sm:divide-y-0">
           <MonthGrid
             month={leftMonth}
             onPrev={goLeftPrev}

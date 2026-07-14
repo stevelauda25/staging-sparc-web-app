@@ -1,4 +1,4 @@
-import { ChevronRight } from "@untitledui/icons"
+import { ChevronRight, LinkExternal01 } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { KpiCard } from "@/components/kpi-card"
 import { Legend } from "@/components/legend"
@@ -60,7 +60,7 @@ function SkillBar({ name, value }: Skill) {
 /** a "Bottom 3" panel: title, subtitle, three skill bars, and a 0..5 axis */
 function BottomPanel({ title, skills }: { title: string; skills: Skill[] }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-4 rounded-[6px] border-[0.5px] border-black/10 bg-white p-3">
+    <div className="flex min-w-0 flex-col gap-4 rounded-[6px] border-[0.5px] border-black/10 bg-white p-3 sm:flex-1">
       <div className="flex flex-col gap-1">
         <p className="text-[13px] leading-[18px] font-normal text-primary">{title}</p>
         <p className="text-[12px] leading-4 font-normal text-secondary">
@@ -110,22 +110,30 @@ export function DashboardSkillsInsights({ className }: DashboardSkillsInsightsPr
         <h2 className="text-[14px] leading-5 font-medium text-primary">Skills Management</h2>
         <a
           href="#skill-dashboard"
-          className="flex items-center gap-0.5 text-[12px] leading-4 font-normal text-secondary underline underline-offset-2"
+          className="hidden items-center gap-0.5 text-[12px] leading-4 font-normal text-secondary underline underline-offset-2 lg:flex"
         >
           Open Skill Dashboard
           <ChevronRight size={14} className="text-secondary" />
+        </a>
+        <a
+          href="#skill-dashboard"
+          aria-label="Open Skill Dashboard"
+          title="Open Skill Dashboard"
+          className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-secondary outline-none hover:bg-[#f5f5f5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] lg:hidden"
+        >
+          <LinkExternal01 size={14} />
         </a>
       </header>
 
       <div className="flex flex-col gap-3 px-3 pb-3">
         <div className="flex flex-col gap-3 pt-3">
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 gap-3 md:flex">
             {KPIS.map((k) => (
-              <KpiCard key={k.label} className="min-w-0 flex-1 basis-0 shadow-none" {...k} />
+              <KpiCard key={k.label} className="min-w-0 md:flex-1 md:basis-0 shadow-none" {...k} />
             ))}
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <BottomPanel title="Bottom 3 Trade Skills" skills={TRADE} />
             <BottomPanel title="Bottom 3 Professional Skills" skills={PROFESSIONAL} />
           </div>

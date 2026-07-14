@@ -3,7 +3,7 @@ import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import "leaflet.markercluster"
 import "leaflet.markercluster/dist/MarkerCluster.css"
-import { ChevronRight } from "@untitledui/icons"
+import { ChevronRight, LinkExternal01 } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { SegmentedButton } from "@/components/segmented-button"
 import { Legend } from "@/components/legend"
@@ -206,7 +206,7 @@ function Panel({ title, action, actionHref = "#", children }: PanelProps) {
   return (
     <section
       className={cn(
-        "flex h-[549px] min-w-0 flex-col overflow-hidden rounded-[6px] border-[0.5px] border-black/10 bg-white",
+        "flex min-w-0 flex-col overflow-hidden rounded-[6px] border-[0.5px] border-black/10 bg-white md:h-[549px]",
         CARD_SHADOW,
       )}
     >
@@ -215,10 +215,20 @@ function Panel({ title, action, actionHref = "#", children }: PanelProps) {
         {action != null && (
           <a
             href={actionHref}
-            className="flex items-center gap-0.5 text-[12px] leading-4 font-normal text-secondary underline underline-offset-2"
+            className="hidden items-center gap-0.5 text-[12px] leading-4 font-normal text-secondary underline underline-offset-2 lg:flex"
           >
             {action}
             <ChevronRight size={14} className="text-secondary" />
+          </a>
+        )}
+        {action != null && (
+          <a
+            href={actionHref}
+            aria-label={action}
+            title={action}
+            className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-secondary outline-none hover:bg-[#f5f5f5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] lg:hidden"
+          >
+            <LinkExternal01 size={14} />
           </a>
         )}
       </header>
@@ -413,11 +423,13 @@ function JobMapPanel() {
 
   return (
     <Panel title="Job Map" action="Open Map" actionHref="#map">
-      <div className="flex h-[505px] flex-col px-3 pb-3">
-        <div className="flex h-[470px] flex-col gap-3 pt-3">
-          <div className="flex h-7 items-center justify-between">
-            <MapTabs value={view} onChange={(next) => setView(next as "active" | "staffed")} />
-            <div className="flex items-center gap-5">
+      <div className="flex flex-col px-3 pb-3 md:h-[505px]">
+        <div className="flex flex-col gap-3 pt-3 md:h-[470px]">
+          <div className="flex items-center gap-3 sm:h-7">
+            <div className="shrink-0">
+              <MapTabs value={view} onChange={(next) => setView(next as "active" | "staffed")} />
+            </div>
+            <div className="ml-auto flex shrink-0 items-center gap-3">
               <Legend variant="square" color="#0d76f2" label="Staffed" />
               <Legend variant="square" color="#8b8175" label="In-progress" />
             </div>
@@ -473,7 +485,7 @@ function JobMapPanel() {
 
 function BudgetKpi({ label, value, description }: (typeof BUDGET_KPIS)[number]) {
   return (
-    <article className="flex h-[104px] min-w-0 flex-1 flex-col justify-between rounded-[6px] border-[0.5px] border-black/10 bg-white p-3">
+    <article className="flex h-[104px] min-w-0 flex-col justify-between rounded-[6px] border-[0.5px] border-black/10 bg-white p-3 sm:flex-1">
       <p className="text-[12px] leading-4 font-normal text-secondary">{label}</p>
       <div className="flex flex-col gap-1">
         <p className="text-[20px] leading-6 font-medium text-primary">{value}</p>
@@ -630,9 +642,9 @@ function ForecastBudgetPanel() {
 
   return (
     <Panel title="Forecast to Budget">
-      <div className="flex h-[505px] flex-col px-3 pb-3">
-        <div className="flex h-[466px] flex-col gap-3 pt-3">
-          <div className="flex h-[104px] gap-3">
+      <div className="flex flex-col px-3 pb-3 md:h-[505px]">
+        <div className="flex flex-col gap-3 pt-3 md:h-[466px]">
+          <div className="flex flex-col gap-3 sm:h-[104px] sm:flex-row">
             {BUDGET_KPIS.map((kpi) => (
               <BudgetKpi key={kpi.label} {...kpi} />
             ))}

@@ -255,7 +255,7 @@ export function Sidebar({ header, floating = false, className }: SidebarProps) {
           name="Jason Heim"
           initials="JH"
           role="Admin"
-          toggle={showToggle ? <SidebarToggle /> : undefined}
+          toggle={showToggle ? <SidebarToggle className="hidden lg:block" /> : undefined}
         />
         <div className="mt-3">
           {/* small search-field, tuned to the sidebar's compact 26px density */}

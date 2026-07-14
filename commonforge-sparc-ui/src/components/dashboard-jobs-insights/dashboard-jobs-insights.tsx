@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { ChevronDown, ChevronRight, ChevronSelectorVertical, ChevronUp } from "@untitledui/icons"
+import { ChevronDown, ChevronRight, ChevronSelectorVertical, ChevronUp, LinkExternal01 } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { OverlayScrollArea } from "@/components/overlay-scroll-area"
 import { SearchField } from "@/components/search-field"
@@ -145,10 +145,20 @@ function Panel({
         {action && (
           <a
             href="#jobs-cards"
-            className="flex items-center gap-0.5 text-xs leading-4 font-normal text-[#525252] underline underline-offset-2"
+            className="hidden items-center gap-0.5 text-xs leading-4 font-normal text-[#525252] underline underline-offset-2 lg:flex"
           >
             {action}
             <ChevronRight size={14} className="text-[#525252]" />
+          </a>
+        )}
+        {action && (
+          <a
+            href="#jobs-cards"
+            aria-label={action}
+            title={action}
+            className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-[#525252] outline-none hover:bg-[#f5f5f5] hover:text-black focus-visible:ring-2 focus-visible:ring-[#CFC7BC] lg:hidden"
+          >
+            <LinkExternal01 size={14} />
           </a>
         )}
       </header>
@@ -304,11 +314,11 @@ function ProjectedRow({ job }: { job: (typeof PROJECTED_JOBS)[number] }) {
   const isPositive = delta >= 0
 
   return (
-    <div className="grid h-[50px] grid-cols-[160px_120px_minmax(0,1fr)] border-b-[0.5px] border-black/10 bg-white last:border-b-0">
-      <div className="flex min-w-0 items-center px-4 py-2">
+    <div className="grid h-[50px] grid-cols-[minmax(0,1fr)_78px_minmax(0,1.5fr)] border-b-[0.5px] border-black/10 bg-white last:border-b-0 sm:grid-cols-[160px_120px_minmax(0,1fr)]">
+      <div className="flex min-w-0 items-center px-3 py-2 sm:px-4">
         <span className="truncate text-xs leading-4 font-normal text-[#525252]">{job.name}</span>
       </div>
-      <div className="flex items-center px-4 py-2">
+      <div className="flex items-center px-3 py-2 sm:px-4">
         <span
           className={cn(
             "text-xs leading-4 font-normal",
@@ -318,7 +328,7 @@ function ProjectedRow({ job }: { job: (typeof PROJECTED_JOBS)[number] }) {
           {formatDelta(delta)}
         </span>
       </div>
-      <div className="flex min-w-0 flex-col justify-center gap-0.5 px-4 py-0.5">
+      <div className="flex min-w-0 flex-col justify-center gap-0.5 px-3 py-0.5 sm:px-4">
         <ThinProgress
           color="#c0180c"
           value={getProgressPercent(job.operationHours, maxHours)}
@@ -442,9 +452,9 @@ function ForecastProjectedPanel() {
     <Panel title="Forecast vs Projected">
       <div className="relative flex h-[660px] flex-col px-3 pb-3">
         <div className="flex h-[609px] flex-col gap-3 pt-3">
-          <div className="flex h-8 items-center">
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="w-[224px] shrink-0">
+          <div className="flex h-8 items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none sm:shrink-0">
+              <div className="min-w-0 flex-1 sm:w-[224px] sm:flex-none">
                 <SearchField
                   size="sm"
                   placeholder="Search projects"
@@ -503,29 +513,29 @@ function ForecastProjectedPanel() {
                 )}
               </div>
             </div>
-            <span className="ml-auto shrink-0 text-[11px] leading-[15px] font-normal text-[#8f8f8f]">
+            <span className="ml-auto hidden shrink-0 text-[11px] leading-[15px] font-normal text-[#8f8f8f] lg:block">
               {filteredJobs.length} of {PROJECTED_JOBS.length} jobs
             </span>
           </div>
 
           <div className="relative h-[553px] overflow-visible">
-            <div className="grid h-8 grid-cols-[160px_120px_minmax(0,1fr)] bg-[#fafafa]">
+            <div className="grid h-8 grid-cols-[minmax(0,1fr)_78px_minmax(0,1.5fr)] bg-[#fafafa] sm:grid-cols-[160px_120px_minmax(0,1fr)]">
               <button
                 type="button"
                 onClick={() => setSort((current) => nextSort(current, "job"))}
-                className="flex h-full items-center px-4 text-left text-xs leading-4 font-normal text-[#525252] outline-none transition-colors hover:text-black"
+                className="flex h-full items-center px-3 text-left text-xs leading-4 font-normal text-[#525252] outline-none transition-colors hover:text-black sm:px-4"
               >
                 Job <SortHint active={sort?.key === "job"} dir={sort?.key === "job" ? sort.dir : undefined} />
               </button>
               <button
                 type="button"
                 onClick={() => setSort((current) => nextSort(current, "delta"))}
-                className="flex h-full items-center px-4 text-left text-xs leading-4 font-normal text-[#525252] outline-none transition-colors hover:text-black"
+                className="flex h-full items-center px-3 text-left text-xs leading-4 font-normal text-[#525252] outline-none transition-colors hover:text-black sm:px-4"
               >
                 Δ% <SortHint active={sort?.key === "delta"} dir={sort?.key === "delta" ? sort.dir : undefined} />
               </button>
-              <div className="flex items-center px-4 py-2 text-xs leading-4 font-normal text-[#525252]">
-                Operation vs Planning
+              <div className="flex min-w-0 items-center px-3 py-2 text-xs leading-4 font-normal text-[#525252] sm:px-4">
+                <span className="truncate">Operation vs Planning</span>
               </div>
             </div>
             <OverlayScrollArea className="h-[533px]" scrollbarRight={-7}>
