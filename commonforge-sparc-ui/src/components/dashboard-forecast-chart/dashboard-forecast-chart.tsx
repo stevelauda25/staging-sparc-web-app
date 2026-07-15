@@ -573,6 +573,14 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
   const displayLabels = fitAxisLabels(xAxisLabels, plotWidth, 52, 68, isMobileAxis ? 4 : Number.POSITIVE_INFINITY)
   const hoverWeekRange = hoverX == null ? null : weekRangeForX(hoverX, chartWindow.start, chartWindow.end)
   const tooltipOnLeft = hoverX != null && hoverX > PLOT.left + PLOT.width - TOOLTIP_WIDTH - 24
+  const tooltipLeft =
+    hoverX == null || plotWidth <= 0
+      ? 8
+      : clamp(
+          (hoverX / SVG_WIDTH) * plotWidth + (tooltipOnLeft ? -TOOLTIP_WIDTH - 12 : 12),
+          8,
+          Math.max(8, plotWidth - TOOLTIP_WIDTH - 8),
+        )
 
   useEffect(() => {
     if (!graphOpen) return
@@ -686,7 +694,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
     <section
       data-node-id="forecast-worker-need-chart"
       className={cn(
-        "flex w-full flex-col overflow-visible rounded-[6px] border-[0.5px] border-black/10 bg-white md:h-[570px] md:overflow-hidden",
+        "flex h-[600px] w-full flex-col overflow-visible rounded-[6px] border-[0.5px] border-black/10 bg-white md:h-[570px] md:overflow-hidden",
         "shadow-[0_2px_6px_-4px_rgba(0,0,0,0.05),0_1px_3px_-2px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)]",
         className,
       )}
@@ -710,7 +718,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
         </a>
       </header>
 
-      <div className="flex flex-col gap-3 p-3 md:h-[526px] md:gap-8">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 p-3 md:h-[526px] md:gap-8">
         <div className="relative flex items-center md:h-[26px]">
           <div className="flex w-full flex-wrap items-center gap-2">
             <SegmentedButton
@@ -849,12 +857,12 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-6 pb-2 md:h-[444px]">
+        <div className="flex min-h-0 flex-1 flex-col items-center gap-6 pb-2 md:h-[444px]">
           {/* plot row: a fixed y-axis gutter + the plotting column. The gutter reserves
               the value labels' space so they cannot overlap the plot once the SVG is
               compressed on a narrow screen. The row is shorter on phones so the curves
               read landscape rather than portrait; desktop keeps the Figma height. */}
-          <div className="flex h-[220px] w-full md:h-[397px]">
+          <div className="flex min-h-0 w-full flex-1 md:h-[397px]">
             <div className="relative w-[29px] shrink-0">
               {Y_TICKS.map((tick, index) => (
                 <span
@@ -1032,7 +1040,7 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                       .sort((a, b) => b.value - a.value)}
                     className="absolute top-3"
                     style={{
-                      left: `calc(${(hoverX / SVG_WIDTH) * 100}% + ${tooltipOnLeft ? -TOOLTIP_WIDTH - 12 : 12}px)`,
+                      left: tooltipLeft,
                     }}
                   />
                 )}
