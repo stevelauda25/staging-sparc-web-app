@@ -255,7 +255,7 @@ export function Sidebar({ header, floating = false, className }: SidebarProps) {
           name="Jason Heim"
           initials="JH"
           role="Admin"
-          toggle={showToggle ? <SidebarToggle className="hidden lg:block" /> : undefined}
+          toggle={showToggle ? <SidebarToggle className="hidden size-4 lg:block" /> : undefined}
         />
         <div className="mt-3">
           {/* small search-field, tuned to the sidebar's compact 26px density */}
@@ -263,7 +263,7 @@ export function Sidebar({ header, floating = false, className }: SidebarProps) {
             size="sm"
             shortcut="⌘K"
             placeholder="Search projects"
-            fieldClassName="py-1 pl-2 !pr-1"
+            fieldClassName="py-1 pl-2 !pr-[4px]"
             containerClassName="h-[26px] border-[0.5px] shadow-[0_0.5px_2px_rgba(0,0,0,0.05)]"
             value={searchQuery}
             onChange={(e) => {

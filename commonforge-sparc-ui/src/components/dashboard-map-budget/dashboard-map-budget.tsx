@@ -215,7 +215,7 @@ function Panel({ title, action, actionHref = "#", children }: PanelProps) {
         {action != null && (
           <a
             href={actionHref}
-            className="hidden items-center gap-0.5 text-[12px] leading-4 font-normal text-secondary underline underline-offset-2 lg:flex"
+            className="hidden items-center gap-0.5 text-[12px] leading-4 font-normal text-secondary underline underline-offset-2 md:flex"
           >
             {action}
             <ChevronRight size={14} className="text-secondary" />
@@ -226,7 +226,7 @@ function Panel({ title, action, actionHref = "#", children }: PanelProps) {
             href={actionHref}
             aria-label={action}
             title={action}
-            className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-secondary outline-none hover:bg-[#f5f5f5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] lg:hidden"
+            className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-secondary outline-none hover:bg-[#f5f5f5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] md:hidden"
           >
             <LinkExternal01 size={14} />
           </a>
@@ -429,7 +429,8 @@ function JobMapPanel() {
             <div className="shrink-0">
               <MapTabs value={view} onChange={(next) => setView(next as "active" | "staffed")} />
             </div>
-            <div className="ml-auto flex shrink-0 items-center gap-3">
+            {/* tablet/desktop: legend rides next to the tabs (mobile shows it at the bottom instead) */}
+            <div className="ml-auto hidden shrink-0 items-center gap-3 md:flex">
               <Legend variant="square" color="#0d76f2" label="Staffed" />
               <Legend variant="square" color="#8b8175" label="In-progress" />
             </div>
@@ -474,9 +475,15 @@ function JobMapPanel() {
             )}
           </div>
         </div>
-        <p className="mt-2 text-[11px] leading-[15px] font-normal text-secondary">
-          {MAP_PINS.length} of {TOTAL_ACTIVE_JOBS} active jobs mapped ({UNMAPPED_JOB_COUNT} have no mappable address).
-          Hover a pin for details.
+        {/* mobile: legend lives at the bottom (top row is tabs-only) */}
+        <div className="mt-2 flex items-center gap-3 md:hidden">
+          <Legend variant="square" color="#0d76f2" label="Staffed" />
+          <Legend variant="square" color="#8b8175" label="In-progress" />
+        </div>
+        {/* tablet/desktop: original caption sits at the bottom, legend rides up top */}
+        <p className="mt-2 hidden text-[11px] font-normal leading-[15px] text-secondary md:block">
+          {MAP_PINS.length} of {TOTAL_ACTIVE_JOBS} active jobs mapped ({UNMAPPED_JOB_COUNT} have no mappable
+          address). Hover a pin for details.
         </p>
       </div>
     </Panel>

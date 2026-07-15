@@ -70,7 +70,7 @@ export function AppShell({ children, className }: AppShellProps) {
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
             "absolute top-[14px] z-[60] hidden size-7 items-center justify-center rounded-md text-secondary outline-none hover:bg-[#F5F5F5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] lg:flex motion-safe:transition-[left] motion-safe:duration-200 motion-safe:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
-            collapsed && !peeked ? "left-3.5" : "left-[12.5rem]",
+            collapsed && !peeked ? "left-3.5" : "left-[12.75rem]",
           )}
         >
           <LayoutLeft className="size-4" />

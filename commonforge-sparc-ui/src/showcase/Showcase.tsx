@@ -6,6 +6,7 @@ import { NavItemShowcase } from "./NavItem"
 import { NavSectionShowcase } from "./NavSection"
 import { SeparatorShowcase } from "./Separator"
 import { BadgeShowcase } from "./Badge"
+import { CheckboxShowcase } from "./Checkbox"
 import { TextInputShowcase, SearchFieldShowcase } from "./FormFields"
 import { AccountSwitcherShowcase } from "./AccountSwitcher"
 import { BreadcrumbShowcase } from "./Breadcrumb"
@@ -38,6 +39,7 @@ export function Showcase() {
         <NavSectionShowcase />
         <SeparatorShowcase />
         <BadgeShowcase />
+        <CheckboxShowcase />
         <TextInputShowcase />
         <SearchFieldShowcase />
         <AccountSwitcherShowcase />

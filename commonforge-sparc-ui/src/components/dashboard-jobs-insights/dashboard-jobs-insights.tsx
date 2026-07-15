@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { ChevronDown, ChevronRight, ChevronSelectorVertical, ChevronUp, LinkExternal01 } from "@untitledui/icons"
 import { cn } from "@/lib/utils"
 import { OverlayScrollArea } from "@/components/overlay-scroll-area"
@@ -135,7 +135,7 @@ function Panel({
   return (
     <section
       className={cn(
-        "relative flex h-[704px] min-w-0 flex-col overflow-hidden rounded-[6px] border-[0.5px] border-black/10 bg-white",
+        "relative flex h-[600px] min-w-0 flex-col overflow-hidden rounded-[6px] border-[0.5px] border-black/10 bg-white",
         "shadow-[0_2px_6px_-4px_rgba(0,0,0,0.05),0_1px_3px_-2px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1),inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.1),inset_0_0.5px_0.5px_0_rgba(255,255,255,0.1)]",
         className,
       )}
@@ -145,7 +145,7 @@ function Panel({
         {action && (
           <a
             href="#jobs-cards"
-            className="hidden items-center gap-0.5 text-xs leading-4 font-normal text-[#525252] underline underline-offset-2 lg:flex"
+            className="hidden items-center gap-0.5 text-xs leading-4 font-normal text-[#525252] underline underline-offset-2 md:flex"
           >
             {action}
             <ChevronRight size={14} className="text-[#525252]" />
@@ -156,7 +156,7 @@ function Panel({
             href="#jobs-cards"
             aria-label={action}
             title={action}
-            className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-[#525252] outline-none hover:bg-[#f5f5f5] hover:text-black focus-visible:ring-2 focus-visible:ring-[#CFC7BC] lg:hidden"
+            className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-[#525252] outline-none hover:bg-[#f5f5f5] hover:text-black focus-visible:ring-2 focus-visible:ring-[#CFC7BC] md:hidden"
           >
             <LinkExternal01 size={14} />
           </a>
@@ -301,7 +301,7 @@ function ThinProgress({
         className="min-w-0 flex-1"
         trackClassName="bg-black/[0.08]"
       />
-      <span className="w-14 shrink-0 text-right text-[11px] leading-[15px] font-normal text-[#525252]">
+      <span className="w-14 shrink-0 text-right text-[11px] leading-[15px] font-medium text-[#525252]">
         {label}
       </span>
     </div>
@@ -314,7 +314,7 @@ function ProjectedRow({ job }: { job: (typeof PROJECTED_JOBS)[number] }) {
   const isPositive = delta >= 0
 
   return (
-    <div className="grid h-[50px] grid-cols-[minmax(0,1fr)_78px_minmax(0,1.5fr)] border-b-[0.5px] border-black/10 bg-white last:border-b-0 sm:grid-cols-[160px_120px_minmax(0,1fr)]">
+    <div className="grid h-[50px] grid-cols-[minmax(0,1fr)_78px_minmax(0,1.5fr)] border-b-[0.5px] border-black/10 bg-white last:border-b-0 sm:grid-cols-[260px_120px_minmax(0,1fr)]">
       <div className="flex min-w-0 items-center px-3 py-2 sm:px-4">
         <span className="truncate text-xs leading-4 font-normal text-[#525252]">{job.name}</span>
       </div>
@@ -387,7 +387,7 @@ function JobsTimePhasedPanel() {
 
   return (
     <Panel title="Jobs Time-Phased Value & Needs" action="Open Jobs Cards">
-      <div className="relative flex h-[660px] flex-col pb-3">
+      <div className="relative flex h-[556px] flex-col pb-3">
         <OverlayScrollArea wrapperClassName="flex-1" className="h-full">
           {NEEDS_JOBS.map((job) => (
             <NeedsJobRow
@@ -414,6 +414,8 @@ function ForecastProjectedPanel() {
   const [filterOpen, setFilterOpen] = useState(false)
   const [sort, setSort] = useState<SortState>(null)
   const filterRef = useRef<HTMLDivElement>(null)
+  // the menu opens left-aligned, and flips to right-aligned only if left would overflow the panel
+  const [filterMenuAlign, setFilterMenuAlign] = useState<"left" | "right">("left")
 
   const q = query.trim().toLowerCase()
   const selectedFilterOption = PROJECTED_FILTERS.find((filter) => filter.id === selectedFilter) ?? PROJECTED_FILTERS[0]
@@ -448,13 +450,32 @@ function ForecastProjectedPanel() {
     }
   }, [filterOpen])
 
+  // keep the menu inside the panel: left-aligned by default, flipped to the right
+  // only when a left-aligned menu would overflow the panel's right edge (checked on
+  // open and on resize, since the panel width changes with the layout)
+  useLayoutEffect(() => {
+    if (!filterOpen) return
+    const trigger = filterRef.current
+    if (!trigger) return
+    const MENU_WIDTH = 176
+    const align = () => {
+      const rect = trigger.getBoundingClientRect()
+      const panel = trigger.closest("section")
+      const boundary = (panel ? panel.getBoundingClientRect().right : window.innerWidth) - 8
+      setFilterMenuAlign(rect.left + MENU_WIDTH > boundary ? "right" : "left")
+    }
+    align()
+    window.addEventListener("resize", align)
+    return () => window.removeEventListener("resize", align)
+  }, [filterOpen])
+
   return (
     <Panel title="Forecast vs Projected">
-      <div className="relative flex h-[660px] flex-col px-3 pb-3">
-        <div className="flex h-[609px] flex-col gap-3 pt-3">
+      <div className="relative flex h-[556px] flex-col px-3 pb-3">
+        <div className="flex h-[505px] flex-col gap-3 pt-3">
           <div className="flex h-8 items-center gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none sm:shrink-0">
-              <div className="min-w-0 flex-1 sm:w-[224px] sm:flex-none">
+              <div className="min-w-0 flex-1 sm:w-[320px] sm:flex-none">
                 <SearchField
                   size="sm"
                   placeholder="Search projects"
@@ -484,7 +505,10 @@ function ForecastProjectedPanel() {
                 {filterOpen && (
                   <div
                     role="menu"
-                    className="absolute left-0 top-full z-30 mt-1 flex w-[176px] flex-col gap-0.5 rounded-[6px] border-[0.5px] border-black/10 bg-white p-1 shadow-[0_1px_1px_0_rgba(0,0,0,0.05),0_4px_8px_0_rgba(0,0,0,0.05),0_2px_4px_0_rgba(0,0,0,0.05)]"
+                    className={cn(
+                      "absolute top-full z-30 mt-1 flex w-[176px] flex-col gap-0.5 rounded-[6px] border-[0.5px] border-black/10 bg-white p-1 shadow-[0_1px_1px_0_rgba(0,0,0,0.05),0_4px_8px_0_rgba(0,0,0,0.05),0_2px_4px_0_rgba(0,0,0,0.05)]",
+                      filterMenuAlign === "right" ? "right-0" : "left-0",
+                    )}
                   >
                     {PROJECTED_FILTERS.map((filter) => {
                       const selected = filter.id === selectedFilter
@@ -501,11 +525,11 @@ function ForecastProjectedPanel() {
                           }}
                           className={cn(
                             "flex w-full items-center justify-between gap-2 rounded-[2px] px-2 py-1.5 text-left text-xs leading-4 outline-none hover:bg-[#f5f5f5]",
-                            selected ? "bg-[#f5f5f5] font-medium text-black" : "font-normal text-[#525252]",
+                            selected ? "bg-[#f5f5f5] font-normal text-black" : "font-normal text-[#525252]",
                           )}
                         >
                           <span>{filter.label}</span>
-                          <span className="text-[11px] leading-[15px] text-[#8f8f8f]">{count}</span>
+                          <span className={cn("text-[11px] leading-[15px]", selected ? "text-black" : "text-[#8f8f8f]")}>{count}</span>
                         </button>
                       )
                     })}
@@ -518,8 +542,8 @@ function ForecastProjectedPanel() {
             </span>
           </div>
 
-          <div className="relative h-[553px] overflow-visible">
-            <div className="grid h-8 grid-cols-[minmax(0,1fr)_78px_minmax(0,1.5fr)] bg-[#fafafa] sm:grid-cols-[160px_120px_minmax(0,1fr)]">
+          <div className="relative h-[449px] overflow-visible">
+            <div className="grid h-8 grid-cols-[minmax(0,1fr)_78px_minmax(0,1.5fr)] bg-[#fafafa] sm:grid-cols-[260px_120px_minmax(0,1fr)]">
               <button
                 type="button"
                 onClick={() => setSort((current) => nextSort(current, "job"))}
@@ -538,7 +562,7 @@ function ForecastProjectedPanel() {
                 <span className="truncate">Operation vs Planning</span>
               </div>
             </div>
-            <OverlayScrollArea className="h-[533px]" scrollbarRight={-7}>
+            <OverlayScrollArea className="h-[429px]" scrollbarRight={-7}>
               {sortedJobs.length > 0 ? (
                 sortedJobs.map((job) => <ProjectedRow key={job.name} job={job} />)
               ) : (
@@ -568,7 +592,7 @@ export function DashboardJobsInsights({ className }: DashboardJobsInsightsProps)
   return (
     <section
       data-node-id="2494:7426"
-      className={cn("grid w-full grid-cols-1 gap-3 min-[900px]:grid-cols-2", className)}
+      className={cn("grid w-full grid-cols-1 gap-3", className)}
     >
       <JobsTimePhasedPanel />
       <ForecastProjectedPanel />

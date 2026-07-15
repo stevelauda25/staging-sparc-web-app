@@ -110,7 +110,7 @@ export function DashboardSkillsInsights({ className }: DashboardSkillsInsightsPr
         <h2 className="text-[14px] leading-5 font-medium text-primary">Skills Management</h2>
         <a
           href="#skill-dashboard"
-          className="hidden items-center gap-0.5 text-[12px] leading-4 font-normal text-secondary underline underline-offset-2 lg:flex"
+          className="hidden items-center gap-0.5 text-[12px] leading-4 font-normal text-secondary underline underline-offset-2 md:flex"
         >
           Open Skill Dashboard
           <ChevronRight size={14} className="text-secondary" />
@@ -119,7 +119,7 @@ export function DashboardSkillsInsights({ className }: DashboardSkillsInsightsPr
           href="#skill-dashboard"
           aria-label="Open Skill Dashboard"
           title="Open Skill Dashboard"
-          className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-secondary outline-none hover:bg-[#f5f5f5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] lg:hidden"
+          className="flex size-7 shrink-0 items-center justify-center rounded-[4px] text-secondary outline-none hover:bg-[#f5f5f5] hover:text-primary focus-visible:ring-2 focus-visible:ring-[#CFC7BC] md:hidden"
         >
           <LinkExternal01 size={14} />
         </a>

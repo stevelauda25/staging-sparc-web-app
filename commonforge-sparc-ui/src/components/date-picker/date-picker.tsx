@@ -78,6 +78,7 @@ interface MonthGridProps {
   connectRange?: boolean
   prevDisabled?: boolean
   nextDisabled?: boolean
+  fullWidth?: boolean
 }
 
 /** one month: header (nav + label), weekday row, and the 6-week day grid */
@@ -91,10 +92,11 @@ function MonthGrid({
   connectRange = false,
   prevDisabled = false,
   nextDisabled = false,
+  fullWidth = false,
 }: MonthGridProps) {
   const weeks = buildWeeks(month)
   return (
-    <div className="flex w-60 flex-col">
+    <div className={cn("flex flex-col", fullWidth ? "w-full" : "w-60")}>
       <header className="flex h-10 items-center justify-between border-b border-[#ebebeb] p-3">
         <NavButton label="Previous month" onClick={onPrev} disabled={prevDisabled}>
           <ChevronLeft className={cn("size-[14px]", prevDisabled ? "text-[#c2c2c2]" : "text-black")} />
@@ -166,6 +168,10 @@ export interface DatePickerProps {
   onApplyRange?: (range: DateRange) => void
   /** range variant: clears the committed and draft range */
   onClearRange?: () => void
+  /** range variant: show a single, freely-navigable month (for compact/modal layouts) */
+  singleMonth?: boolean
+  /** stretch the card and month grid to fill the container width */
+  fullWidth?: boolean
   className?: string
 }
 
@@ -187,6 +193,8 @@ export function DatePicker({
   onRangeChange,
   onApplyRange,
   onClearRange,
+  singleMonth = false,
+  fullWidth = false,
   className,
 }: DatePickerProps) {
   const initialRangeStart = range?.start ?? defaultRange?.start ?? null
@@ -205,6 +213,7 @@ export function DatePicker({
   const cardClass = cn(
     "inline-flex rounded-[6px] border-[0.5px] border-black/10 bg-white",
     "shadow-[0_1px_1px_0_rgba(0,0,0,0.05),0_4px_8px_0_rgba(0,0,0,0.05),0_2px_4px_0_rgba(0,0,0,0.05)]",
+    fullWidth && "w-full",
     className,
   )
 
@@ -229,6 +238,8 @@ export function DatePicker({
     })
   }
   const goRightNext = (event: MouseEvent<HTMLButtonElement>) => setRightMonth((m) => addMonths(m, navStep(event)))
+  // single-month range mode: the one visible month navigates freely in both directions
+  const goViewNext = (event: MouseEvent<HTMLButtonElement>) => setLeftMonth((m) => addMonths(m, navStep(event)))
 
   if (variant === "range") {
     const currentRangeStart = draftRange.start
@@ -273,26 +284,41 @@ export function DatePicker({
     return (
       <div className={cn(cardClass, "flex-col")}>
         <div className="flex flex-col divide-y divide-[#ebebeb] sm:flex-row sm:divide-y-0">
-          <MonthGrid
-            month={leftMonth}
-            onPrev={goLeftPrev}
-            onNext={goLeftNext}
-            isSelected={isSelected}
-            isInRange={isInRange}
-            onPick={pickRange}
-            connectRange={hasCompleteDraftRange}
-            nextDisabled={leftNextDisabled}
-          />
-          <MonthGrid
-            month={rightMonth}
-            onPrev={goRightPrev}
-            onNext={goRightNext}
-            isSelected={isSelected}
-            isInRange={isInRange}
-            onPick={pickRange}
-            connectRange={hasCompleteDraftRange}
-            prevDisabled={rightPrevDisabled}
-          />
+          {singleMonth ? (
+            <MonthGrid
+              month={leftMonth}
+              onPrev={goLeftPrev}
+              onNext={goViewNext}
+              isSelected={isSelected}
+              isInRange={isInRange}
+              onPick={pickRange}
+              connectRange={hasCompleteDraftRange}
+              fullWidth={fullWidth}
+            />
+          ) : (
+            <>
+              <MonthGrid
+                month={leftMonth}
+                onPrev={goLeftPrev}
+                onNext={goLeftNext}
+                isSelected={isSelected}
+                isInRange={isInRange}
+                onPick={pickRange}
+                connectRange={hasCompleteDraftRange}
+                nextDisabled={leftNextDisabled}
+              />
+              <MonthGrid
+                month={rightMonth}
+                onPrev={goRightPrev}
+                onNext={goRightNext}
+                isSelected={isSelected}
+                isInRange={isInRange}
+                onPick={pickRange}
+                connectRange={hasCompleteDraftRange}
+                prevDisabled={rightPrevDisabled}
+              />
+            </>
+          )}
         </div>
         <div className="flex items-center justify-end gap-1 border-t-[0.5px] border-black/10 p-3">
           <button

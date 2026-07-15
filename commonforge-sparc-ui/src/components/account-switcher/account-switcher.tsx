@@ -44,7 +44,7 @@ export function AccountSwitcher({
   className,
 }: AccountSwitcherProps) {
   return (
-    <div className={cn("flex h-10 w-full items-center gap-2 rounded-sm pl-1 pr-0 lg:w-[calc(100%+2px)]", className)}>
+    <div className={cn("flex h-10 w-full items-center gap-2 rounded-[6px] bg-[#FBFAF9] pl-1 pr-[6px] lg:w-full", className)}>
       <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
         <button
           type="button"
