@@ -564,6 +564,22 @@ function BudgetStatusContent() {
     })
   }
 
+  function handleSegmentPointerDown(event: PointerEvent<SVGPathElement>, item: BudgetLegendItem) {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    handleSegmentPointerMove(event, item)
+  }
+
+  function handleSegmentPointerUp(event: PointerEvent<SVGPathElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    if (event.pointerType !== "mouse") setTooltip(null)
+  }
+
+  function handleSegmentPointerLeave(event: PointerEvent<SVGPathElement>) {
+    if (event.pointerType === "mouse") setTooltip(null)
+  }
+
   return (
     <div role="tabpanel" aria-label="Budget status" className="mt-[20px] flex min-h-0 flex-1 flex-col items-center">
       <BudgetLegend />
@@ -588,8 +604,12 @@ function BudgetStatusContent() {
               filter="url(#budget-status-shadow)"
               aria-label={`${segment.label}: ${segment.value} jobs ${segment.percent}`}
               className="cursor-default"
+              style={{ touchAction: "none" }}
+              onPointerDown={(event) => handleSegmentPointerDown(event, segment)}
               onPointerMove={(event) => handleSegmentPointerMove(event, segment)}
-              onPointerLeave={() => setTooltip(null)}
+              onPointerUp={handleSegmentPointerUp}
+              onPointerCancel={handleSegmentPointerUp}
+              onPointerLeave={handleSegmentPointerLeave}
             />
           ))}
         </svg>

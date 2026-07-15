@@ -651,13 +651,38 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
     setHoverX(null)
   }
 
-  function handleChartPointerMove(event: PointerEvent<SVGRectElement>) {
+  function updateHoverFromPointer(event: PointerEvent<SVGRectElement>) {
     const svg = event.currentTarget.ownerSVGElement
     if (!svg) return
 
     const rect = svg.getBoundingClientRect()
     const pointerX = ((event.clientX - rect.left) / rect.width) * SVG_WIDTH
     setHoverX(clamp(pointerX, PLOT.left, PLOT.left + PLOT.width))
+  }
+
+  function handleChartPointerDown(event: PointerEvent<SVGRectElement>) {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    updateHoverFromPointer(event)
+  }
+
+  function handleChartPointerMove(event: PointerEvent<SVGRectElement>) {
+    updateHoverFromPointer(event)
+  }
+
+  function handleChartPointerUp(event: PointerEvent<SVGRectElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    if (event.pointerType !== "mouse") clearHover()
+  }
+
+  function handleChartPointerCancel(event: PointerEvent<SVGRectElement>) {
+    handleChartPointerUp(event)
+    clearHover()
+  }
+
+  function handleChartPointerLeave(event: PointerEvent<SVGRectElement>) {
+    if (event.pointerType === "mouse") clearHover()
   }
 
   return (
@@ -726,14 +751,13 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                   // and covers the frame header (z-30); z-[80] clears the app chrome
                   createPortal(
                   <div
-                    className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 px-5 py-4"
+                    className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 p-4"
                     onClick={() => setDateOpen(false)}
                   >
-                    <div className="w-full" onClick={(event) => event.stopPropagation()}>
+                    <div onClick={(event) => event.stopPropagation()}>
                       <DatePicker
                         variant="range"
                         singleMonth
-                        fullWidth
                         defaultMonth={dateRange.start ?? undefined}
                         range={dateRange}
                         defaultRange={dateRange}
@@ -967,9 +991,12 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                 height={PLOT.height}
                 fill="transparent"
                 pointerEvents="all"
-                style={{ cursor: "crosshair" }}
+                style={{ cursor: "crosshair", touchAction: "pan-y" }}
+                onPointerDown={handleChartPointerDown}
                 onPointerMove={handleChartPointerMove}
-                onPointerLeave={clearHover}
+                onPointerUp={handleChartPointerUp}
+                onPointerCancel={handleChartPointerCancel}
+                onPointerLeave={handleChartPointerLeave}
               />
             </svg>
             {hoverX != null && (
