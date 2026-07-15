@@ -572,12 +572,14 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
   // mobile uses a maximum of four labels, evenly distributed across the axis.
   const displayLabels = fitAxisLabels(xAxisLabels, plotWidth, 52, 68, isMobileAxis ? 4 : Number.POSITIVE_INFINITY)
   const hoverWeekRange = hoverX == null ? null : weekRangeForX(hoverX, chartWindow.start, chartWindow.end)
-  const tooltipOnLeft = hoverX != null && hoverX > PLOT.left + PLOT.width - TOOLTIP_WIDTH - 24
+  const tooltipMarkerX = hoverX == null || plotWidth <= 0 ? 0 : (hoverX / SVG_WIDTH) * plotWidth
+  const tooltipOffset = 12
+  const tooltipOnLeft = tooltipMarkerX + TOOLTIP_WIDTH + tooltipOffset > plotWidth - 8
   const tooltipLeft =
     hoverX == null || plotWidth <= 0
       ? 8
       : clamp(
-          (hoverX / SVG_WIDTH) * plotWidth + (tooltipOnLeft ? -TOOLTIP_WIDTH - 12 : 12),
+          tooltipMarkerX + (tooltipOnLeft ? -TOOLTIP_WIDTH - tooltipOffset : tooltipOffset),
           8,
           Math.max(8, plotWidth - TOOLTIP_WIDTH - 8),
         )
