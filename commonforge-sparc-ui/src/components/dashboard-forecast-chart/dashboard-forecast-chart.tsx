@@ -651,37 +651,34 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
     setHoverX(null)
   }
 
-  function updateHoverFromPointer(event: PointerEvent<SVGRectElement>) {
-    const svg = event.currentTarget.ownerSVGElement
-    if (!svg) return
-
-    const rect = svg.getBoundingClientRect()
+  function updateHoverFromPointer(event: PointerEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect()
     const pointerX = ((event.clientX - rect.left) / rect.width) * SVG_WIDTH
     setHoverX(clamp(pointerX, PLOT.left, PLOT.left + PLOT.width))
   }
 
-  function handleChartPointerDown(event: PointerEvent<SVGRectElement>) {
+  function handleChartPointerDown(event: PointerEvent<HTMLDivElement>) {
     event.currentTarget.setPointerCapture(event.pointerId)
     updateHoverFromPointer(event)
   }
 
-  function handleChartPointerMove(event: PointerEvent<SVGRectElement>) {
+  function handleChartPointerMove(event: PointerEvent<HTMLDivElement>) {
     updateHoverFromPointer(event)
   }
 
-  function handleChartPointerUp(event: PointerEvent<SVGRectElement>) {
+  function handleChartPointerUp(event: PointerEvent<HTMLDivElement>) {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
     if (event.pointerType !== "mouse") clearHover()
   }
 
-  function handleChartPointerCancel(event: PointerEvent<SVGRectElement>) {
+  function handleChartPointerCancel(event: PointerEvent<HTMLDivElement>) {
     handleChartPointerUp(event)
     clearHover()
   }
 
-  function handleChartPointerLeave(event: PointerEvent<SVGRectElement>) {
+  function handleChartPointerLeave(event: PointerEvent<HTMLDivElement>) {
     if (event.pointerType === "mouse") clearHover()
   }
 
@@ -984,23 +981,19 @@ export function DashboardForecastChart({ className }: DashboardForecastChartProp
                 />
               ))}
 
-              <rect
-                x={PLOT.left}
-                y={PLOT.top}
-                width={PLOT.width}
-                height={PLOT.height}
-                fill="transparent"
-                pointerEvents="all"
-                style={{ cursor: "crosshair", touchAction: "pan-y" }}
-                onPointerDown={handleChartPointerDown}
-                onPointerMove={handleChartPointerMove}
-                onPointerUp={handleChartPointerUp}
-                onPointerCancel={handleChartPointerCancel}
-                onPointerLeave={handleChartPointerLeave}
-              />
+              <rect x={PLOT.left} y={PLOT.top} width={PLOT.width} height={PLOT.height} fill="transparent" pointerEvents="none" />
             </svg>
+            <div
+              className="absolute inset-0 z-20 cursor-crosshair"
+              style={{ touchAction: "pan-y" }}
+              onPointerDown={handleChartPointerDown}
+              onPointerMove={handleChartPointerMove}
+              onPointerUp={handleChartPointerUp}
+              onPointerCancel={handleChartPointerCancel}
+              onPointerLeave={handleChartPointerLeave}
+            />
             {hoverX != null && (
-              <div className="pointer-events-none absolute inset-0 z-20">
+              <div className="pointer-events-none absolute inset-0 z-30">
                 <span
                   className="absolute w-px bg-[#352e29]/55"
                   style={{

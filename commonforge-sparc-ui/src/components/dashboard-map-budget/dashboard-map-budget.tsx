@@ -539,6 +539,21 @@ function BudgetStatusContent() {
   const chartRef = useRef<HTMLDivElement>(null)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; item: BudgetLegendItem } | null>(null)
 
+  useEffect(() => {
+    if (tooltip == null) return
+
+    function handleDocumentPointerDown(event: globalThis.PointerEvent) {
+      if (event.pointerType !== "mouse") {
+        setTooltip(null)
+      }
+    }
+
+    document.addEventListener("pointerdown", handleDocumentPointerDown, true)
+    return () => {
+      document.removeEventListener("pointerdown", handleDocumentPointerDown, true)
+    }
+  }, [tooltip])
+
   function handleSegmentPointerMove(event: PointerEvent<SVGPathElement>, item: BudgetLegendItem) {
     const chartRect = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
     if (!chartRect) return
@@ -565,6 +580,11 @@ function BudgetStatusContent() {
   }
 
   function handleSegmentPointerDown(event: PointerEvent<SVGPathElement>, item: BudgetLegendItem) {
+    if (event.pointerType !== "mouse" && tooltip != null) {
+      setTooltip(null)
+      return
+    }
+
     event.currentTarget.setPointerCapture(event.pointerId)
     handleSegmentPointerMove(event, item)
   }
@@ -573,6 +593,10 @@ function BudgetStatusContent() {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
+  }
+
+  function handleSegmentPointerCancel(event: PointerEvent<SVGPathElement>) {
+    handleSegmentPointerUp(event)
     if (event.pointerType !== "mouse") setTooltip(null)
   }
 
@@ -608,7 +632,7 @@ function BudgetStatusContent() {
               onPointerDown={(event) => handleSegmentPointerDown(event, segment)}
               onPointerMove={(event) => handleSegmentPointerMove(event, segment)}
               onPointerUp={handleSegmentPointerUp}
-              onPointerCancel={handleSegmentPointerUp}
+              onPointerCancel={handleSegmentPointerCancel}
               onPointerLeave={handleSegmentPointerLeave}
             />
           ))}
