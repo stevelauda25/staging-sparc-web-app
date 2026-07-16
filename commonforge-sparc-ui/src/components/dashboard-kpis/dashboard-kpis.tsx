@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils"
 import { KpiCard } from "@/components/kpi-card"
+import { REAL_KPIS } from "@/real-data/kpis"
 
-const DEFAULT_KPIS = [
+const DEFAULT_KPIS_SAMPLE = [
   {
     label: "Forecast need",
     value: "182",
@@ -18,6 +19,9 @@ const DEFAULT_KPIS = [
     description: "40 more needed than available",
   },
 ]
+
+// preview: real KPI numbers from the local DB (git-ignored file); falls back to the sample
+const DEFAULT_KPIS = REAL_KPIS.length > 0 ? REAL_KPIS : DEFAULT_KPIS_SAMPLE
 
 export interface DashboardKpi {
   label: string

@@ -6,8 +6,9 @@ import { SearchField } from "@/components/search-field"
 import { Legend } from "@/components/legend"
 import { ProgressValueBar } from "@/components/progress-value-bar"
 import { ProgressBar } from "@/components/progress-bar"
+import { REAL_NEEDS_JOBS, REAL_PROJECTED_JOBS } from "@/real-data/jobs-data"
 
-const NEEDS_JOBS = [
+const NEEDS_JOBS_SAMPLE = [
   { name: "Holly Hills Repl ES", id: "#25011", status: "In-Progress", needed: "23 needed", actualHours: "12,025h", projectedHours: "30,197h", actualPercent: 40, calendarPercent: 34 },
   { name: "BVSD Fairview HS", id: "#25012", status: "In-Progress", needed: "16 needed", actualHours: "6,908h", projectedHours: "10,460h", actualPercent: 66, calendarPercent: 39 },
   { name: "BVSD Critical Needs CTE", id: "#25013", status: "At Risk", needed: "19 needed", actualHours: "12,435h", projectedHours: "30,197h", actualPercent: 41, calendarPercent: 30 },
@@ -23,6 +24,9 @@ const NEEDS_JOBS = [
   { name: "North Ridge ES Addition", id: "#25023", status: "At Risk", needed: "25 needed", actualHours: "11,200h", projectedHours: "16,800h", actualPercent: 67, calendarPercent: 48 },
   { name: "Summit Lab Renovation", id: "#25024", status: "On Track", needed: "11 needed", actualHours: "4,640h", projectedHours: "9,400h", actualPercent: 49, calendarPercent: 55 },
 ]
+
+// preview: real jobs from the local DB (git-ignored file); falls back to the sample above
+const NEEDS_JOBS = REAL_NEEDS_JOBS.length > 0 ? REAL_NEEDS_JOBS : NEEDS_JOBS_SAMPLE
 
 // electrical phase mix. `weight` = share of a job's projected hours; `pace` =
 // how far this phase runs vs the job's overall completion (early trades lead,
@@ -74,7 +78,7 @@ function phasesFor(job: (typeof NEEDS_JOBS)[number]) {
   }))
 }
 
-const PROJECTED_JOBS = [
+const PROJECTED_JOBS_SAMPLE = [
   { name: "Titan Compark N. Bldg 1-2", operationHours: 3280, planningHours: 4 },
   { name: "CCSD-CCHS - Academics Ph1", operationHours: 3280, planningHours: 350 },
   { name: "Falcon Bldg B Mods-ACCO", operationHours: 1440, planningHours: 1620 },
@@ -94,6 +98,8 @@ const PROJECTED_JOBS = [
   { name: "Redstone HVAC Phase 2", operationHours: 3650, planningHours: 2920 },
   { name: "Summit Lab Renovation", operationHours: 1460, planningHours: 1390 },
 ]
+
+const PROJECTED_JOBS = REAL_PROJECTED_JOBS.length > 0 ? REAL_PROJECTED_JOBS : PROJECTED_JOBS_SAMPLE
 
 const HOUR_FORMATTER = new Intl.NumberFormat("en-US")
 

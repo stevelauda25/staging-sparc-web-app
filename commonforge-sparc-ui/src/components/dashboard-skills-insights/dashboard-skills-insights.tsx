@@ -3,17 +3,21 @@ import { cn } from "@/lib/utils"
 import { KpiCard } from "@/components/kpi-card"
 import { Legend } from "@/components/legend"
 import { ProgressValueBar } from "@/components/progress-value-bar"
+import { REAL_SKILLS } from "@/real-data/skills"
 
 // the shared card shadow (shadow-003)
 const CARD_SHADOW =
   "shadow-[0_2px_6px_-4px_rgba(0,0,0,0.05),0_1px_3px_-2px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1),inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.1),inset_0_0.5px_0.5px_0_rgba(255,255,255,0.1)]"
 
-const KPIS = [
+const KPIS_SAMPLE = [
   { label: "Worker missing skills", value: "110", description: "Workers missing a skill" },
   { label: "Avg. skill level", value: "2.9", description: "Average rating, 0 to 5" },
   { label: "Verified skills", value: "80%", description: "Share of skills verified" },
   { label: "Never assessed", value: "11", description: "Workers with no records" },
 ]
+
+// preview: real skills metrics from the local DB (git-ignored file); fall back to the sample
+const KPIS = REAL_SKILLS.kpis.length > 0 ? REAL_SKILLS.kpis : KPIS_SAMPLE
 
 // the 5 skill levels, indexed 0..4. `onDark` marks fills that need white text.
 const LEVELS = [
@@ -24,16 +28,19 @@ const LEVELS = [
   { color: "#0072E4", label: "Level 5 (Expert)", onDark: true },
 ]
 
-const TRADE = [
+const TRADE_SAMPLE = [
   { name: "Fire Alarm", value: 1.8 },
   { name: "Distribution Gear", value: 2.0 },
   { name: "Lighting Control System", value: 2.5 },
 ]
-const PROFESSIONAL = [
+const PROFESSIONAL_SAMPLE = [
   { name: "Project Leadership experience", value: 2.4 },
   { name: "Print Reading", value: 0.9 },
   { name: "Labor Productivity & Tracking", value: 2.8 },
 ]
+
+const TRADE = REAL_SKILLS.trade.length > 0 ? REAL_SKILLS.trade : TRADE_SAMPLE
+const PROFESSIONAL = REAL_SKILLS.professional.length > 0 ? REAL_SKILLS.professional : PROFESSIONAL_SAMPLE
 
 interface Skill {
   name: string

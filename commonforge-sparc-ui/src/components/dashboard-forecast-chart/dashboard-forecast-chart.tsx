@@ -9,6 +9,7 @@ import { ListBase } from "@/components/list-base"
 import { ChartTooltip } from "@/components/chart-tooltip"
 import { DatePicker } from "@/components/date-picker"
 import { Checkbox } from "@/components/checkbox"
+import { REAL_FORECAST } from "@/real-data/forecast"
 
 // 24 months of forecast horizon (2 years). The range control shows the first N
 // of these, so a shorter range zooms into the near-term forecast.
@@ -61,12 +62,14 @@ const FN_WIN90 = FN_PROGRESS.map((value, p) => value + Math.max(3, Math.round(up
 const FN_WIN60 = FN_WIN90.map((value, p) => value + Math.max(3, Math.round(upperGapTrend(p, 15) + hill(p, 3, 6))))
 const FN_POTENTIAL = FN_WIN60.map((value, p) => value + Math.max(3, Math.round(upperGapTrend(p, 11) + hill(p, 4, 5))))
 
+// preview: real weekly staffing-by-status funnel from the local DB; falls back to synthetic
+const HAS_REAL_FORECAST = (REAL_FORECAST.assigned?.length ?? 0) > 0
 const SERIES = [
-  { id: "assigned", label: "Assigned workers", color: "#352e29", values: FN_ASSIGNED },
-  { id: "progress", label: "In-progress", color: "#4169D6", values: FN_PROGRESS },
-  { id: "win90", label: "90% win", color: "#129457", values: FN_WIN90 },
-  { id: "win60", label: "60% win", color: "#E59C0E", values: FN_WIN60 },
-  { id: "potential", label: "Potential", color: "#DB4C86", values: FN_POTENTIAL },
+  { id: "assigned", label: "Assigned workers", color: "#352e29", values: HAS_REAL_FORECAST ? REAL_FORECAST.assigned : FN_ASSIGNED },
+  { id: "progress", label: "In-progress", color: "#4169D6", values: HAS_REAL_FORECAST ? REAL_FORECAST.progress : FN_PROGRESS },
+  { id: "win90", label: "90% win", color: "#129457", values: HAS_REAL_FORECAST ? REAL_FORECAST.win90 : FN_WIN90 },
+  { id: "win60", label: "60% win", color: "#E59C0E", values: HAS_REAL_FORECAST ? REAL_FORECAST.win60 : FN_WIN60 },
+  { id: "potential", label: "Potential", color: "#DB4C86", values: HAS_REAL_FORECAST ? REAL_FORECAST.potential : FN_POTENTIAL },
 ]
 
 const RANGE_OPTIONS = ["1W", "2W", "1M", "3M", "6M", "1Y", "1.5Y", "2Y", "All"] as const

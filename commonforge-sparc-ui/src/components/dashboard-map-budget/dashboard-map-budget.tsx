@@ -9,6 +9,14 @@ import { SegmentedButton } from "@/components/segmented-button"
 import { Legend } from "@/components/legend"
 import { ChartTooltip } from "@/components/chart-tooltip"
 import { OverlayScrollArea } from "@/components/overlay-scroll-area"
+import {
+  REAL_BUDGET,
+  REAL_BUDGET_KPIS,
+  REAL_BUDGET_UTILIZATION,
+  REAL_ACTIVE_TOTAL,
+  REAL_OVER_BUDGET,
+} from "@/real-data/budget"
+import { REAL_MAP_PINS, REAL_TOTAL_ACTIVE_JOBS, type RealMapPin } from "@/real-data/map-pins"
 
 const CARD_SHADOW =
   "shadow-[0_2px_6px_-4px_rgba(0,0,0,0.05),0_1px_3px_-2px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1),inset_0_-0.5px_0.5px_0_rgba(0,0,0,0.1),inset_0_0.5px_0.5px_0_rgba(255,255,255,0.1)]"
@@ -22,34 +30,76 @@ const PIN_TOOLTIP_GAP = 10
 const PIN_COLOR = { staffed: "#0d76f2", "in-progress": "#8b8175" } as const
 const PIN_STATUS_LABEL = { staffed: "Staffed", "in-progress": "In-progress" } as const
 
-const BUDGET_KPIS = [
+const BUDGET_KPIS_SAMPLE = [
   { label: "Active jobs", value: "104", description: "Jobs in the forecast" },
   { label: "Staffed jobs", value: "29", description: "Jobs with crew assigned" },
   { label: "Jobs over budget", value: "24", description: "Jobs projected over bid" },
 ]
+// preview: real budget KPI tiles from the local DB (git-ignored); fall back to the sample
+const BUDGET_KPIS = REAL_BUDGET_KPIS.length > 0 ? REAL_BUDGET_KPIS : BUDGET_KPIS_SAMPLE
+const ACTIVE_JOBS_TOTAL = REAL_ACTIVE_TOTAL > 0 ? REAL_ACTIVE_TOTAL : 104
+const JOBS_OVER_BUDGET = REAL_OVER_BUDGET > 0 ? REAL_OVER_BUDGET : 24
 
-const BUDGET_LEGEND = [
+const BUDGET_LEGEND_SAMPLE = [
   { label: "On track", value: "61", percent: "(57%)", color: "#00a97f" },
   { label: "Over budget", value: "14", percent: "(12%)", color: "#e51d31" },
   { label: "No data", value: "27", percent: "(31%)", color: "#b8b8b8" },
 ]
+// preview: real budget health from the local DB (git-ignored file); falls back to the sample
+const BUDGET_LEGEND = REAL_BUDGET.length > 0 ? REAL_BUDGET : BUDGET_LEGEND_SAMPLE
 
-const BUDGET_STATUS_SEGMENTS = [
-  {
-    ...BUDGET_LEGEND[0],
-    path: "M59.7956 25.6919C60.8476 25.5772 61.6727 24.7078 61.6727 23.6496V1.97027C61.6727 0.837674 60.7327 -0.0720278 59.6027 0.00468955C55.0266 0.315372 50.5824 1.10725 46.3204 2.33007C44.8225 2.75975 43.347 3.24286 41.8963 3.77684C17.4421 12.7795 0 36.2905 0 63.8767C0 98.4552 27.4045 126.631 61.6727 127.856C62.4451 127.884 63.2209 127.897 64 127.897C64.7791 127.897 65.5549 127.884 66.3273 127.856C71.0448 127.687 75.6323 127.008 80.0361 125.871C81.1312 125.588 81.7363 124.431 81.3817 123.357L74.5841 102.771C74.2515 101.764 73.1912 101.197 72.1544 101.421C70.2603 101.831 68.3141 102.101 66.3273 102.22C65.5574 102.266 64.7814 102.289 64 102.289C63.2186 102.289 62.4426 102.266 61.6727 102.22C41.5487 101.016 25.6 84.3095 25.6 63.8767C25.6 47.6286 35.6851 33.7363 49.9352 28.1225C51.3706 27.557 52.8483 27.0756 54.3622 26.6843C56.1273 26.2279 57.9416 25.8939 59.7956 25.6919Z",
-  },
-  {
-    ...BUDGET_LEGEND[1],
-    path: "M116.717 96.4279C117.693 96.9917 118.013 98.2526 117.39 99.1926C110.369 109.793 100.277 118.181 88.3829 123.087C87.3331 123.52 86.1501 122.952 85.794 121.873L78.9917 101.273C78.6614 100.273 79.1664 99.1926 80.1222 98.7498C86.183 95.9412 91.3884 91.5983 95.2398 86.2193C95.8611 85.3517 97.0371 85.0623 97.9612 85.596L116.717 96.4279Z",
-  },
-  {
-    ...BUDGET_LEGEND[2],
-    path: "M68.2044 25.6919C67.1524 25.5772 66.3271 24.7078 66.3271 23.6496V1.97026C66.3271 0.837663 67.2709 -0.0718425 68.4009 0.00493105C101.694 2.26695 128 29.9986 128 63.8767C128 73.7849 125.75 83.1677 121.733 91.541C121.24 92.5678 119.975 92.9342 118.989 92.3647L100.197 81.5119C99.29 80.9879 98.9463 79.8546 99.356 78.8903C101.316 74.2783 102.4 69.204 102.4 63.8767C102.4 44.0836 87.4341 27.7868 68.2044 25.6919Z",
-  },
-]
+// a donut wedge with flat ends and lightly rounded (2px) corners.
+// The side edges are offset by a fixed pixel distance (not a fixed angle), so the
+// gap between neighbouring segments stays a constant width instead of fanning out.
+function donutSegment(startFrac: number, endFrac: number): string {
+  const cx = 64
+  const cy = 63.95
+  const ro = 63.9
+  const ri = 40
+  const cr = 2 // corner radius, in px (1 viewBox unit === 1px at this size)
+  const gapW = 4 // constant gap width between segments, in px
+  const gapO = gapW / 2 / ro // angular half-gap at the outer radius
+  const gapI = gapW / 2 / ri // angular half-gap at the inner radius (larger, keeps gap parallel)
+  const s = startFrac * 2 * Math.PI - Math.PI / 2
+  const e = endFrac * 2 * Math.PI - Math.PI / 2
+  const aoi = cr / ro // corner inset along the outer arc
+  const aii = cr / ri // corner inset along the inner arc
+  type P = [number, number]
+  const pt = (r: number, a: number): P => [cx + r * Math.cos(a), cy + r * Math.sin(a)]
+  const toward = (p: P, q: P, d: number): P => {
+    const dx = q[0] - p[0]
+    const dy = q[1] - p[1]
+    const len = Math.hypot(dx, dy) || 1
+    return [p[0] + (dx / len) * d, p[1] + (dy / len) * d]
+  }
+  const f = ([x, y]: P) => `${x.toFixed(3)} ${y.toFixed(3)}`
+  const A = pt(ro, s + gapO) // outer-start corner
+  const B = pt(ro, e - gapO) // outer-end corner
+  const C = pt(ri, e - gapI) // inner-end corner
+  const D = pt(ri, s + gapI) // inner-start corner
+  const large = e - s > Math.PI ? 1 : 0
+  return [
+    `M ${f(pt(ro, s + gapO + aoi))}`,
+    `A ${ro} ${ro} 0 ${large} 1 ${f(pt(ro, e - gapO - aoi))}`,
+    `Q ${f(B)} ${f(toward(B, C, cr))}`,
+    `L ${f(toward(C, B, cr))}`,
+    `Q ${f(C)} ${f(pt(ri, e - gapI - aii))}`,
+    `A ${ri} ${ri} 0 ${large} 0 ${f(pt(ri, s + gapI + aii))}`,
+    `Q ${f(D)} ${f(toward(D, A, cr))}`,
+    `L ${f(toward(A, D, cr))}`,
+    `Q ${f(A)} ${f(pt(ro, s + gapO + aoi))}`,
+    "Z",
+  ].join(" ")
+}
 
-const BUDGET_UTILIZATION_ROWS = [
+const BUDGET_STATUS_TOTAL = BUDGET_LEGEND.reduce((sum, item) => sum + Number(item.value), 0)
+const BUDGET_STATUS_SEGMENTS = BUDGET_LEGEND.map((item, index, all) => {
+  const start = all.slice(0, index).reduce((sum, x) => sum + Number(x.value), 0) / BUDGET_STATUS_TOTAL
+  const end = start + Number(item.value) / BUDGET_STATUS_TOTAL
+  return { ...item, path: donutSegment(start, end) }
+})
+
+const BUDGET_UTILIZATION_ROWS_SAMPLE = [
   { job: "Izzio ASI 5", value: "546%", fill: 82.6 },
   { job: "Falcon Bldg BMods", value: "511%", fill: 78.8 },
   { job: "BVSD Critical Needs", value: "486%", fill: 76.0 },
@@ -74,10 +124,13 @@ const BUDGET_UTILIZATION_ROWS = [
   { job: "Harmony Lab Buildout", value: "149%", fill: 39.3 },
   { job: "Prospect Shop Fitout", value: "138%", fill: 38.1 },
 ]
+// preview: real per-job over-budget utilization from the local DB (git-ignored); falls back to sample
+const BUDGET_UTILIZATION_ROWS =
+  REAL_BUDGET_UTILIZATION.length > 0 ? REAL_BUDGET_UTILIZATION : BUDGET_UTILIZATION_ROWS_SAMPLE
 
 // real Front Range coordinates (lat/lng). The Denver job sits on the real
 // address 1284 S Cherokee St, Denver CO 80223 (39.69336, -104.99123).
-const MAP_PINS = [
+const MAP_PINS_SAMPLE: RealMapPin[] = [
   { label: "DC", status: "staffed", job: "DCSD Legacy CIP", id: "#25019", crew: 14, lat: 39.3722, lng: -104.8561 },
   { label: "BK", status: "staffed", job: "Boulder Creek Re-Roof", id: "#25031", crew: 9, lat: 40.0176, lng: -105.2811 },
   { label: "CC", status: "staffed", job: "Clear Creek Crossing", id: "#25018", crew: 6, lat: 39.7861, lng: -105.105 },
@@ -182,9 +235,12 @@ const MAP_PINS = [
   { label: "WY", status: "in-progress", job: "Wray District Shop", id: "#25117", crew: 6, lat: 40.0758, lng: -102.2232 },
   { label: "KT", status: "in-progress", job: "Kit Carson Field House", id: "#25118", crew: 4, lat: 38.7644, lng: -102.7957 },
   { label: "SP", status: "in-progress", job: "Springfield Controls", id: "#25119", crew: 5, lat: 37.4083, lng: -102.6144 },
-] as const
+]
 
-const TOTAL_ACTIVE_JOBS = 104
+// preview: real Job Map pins from the local DB (git-ignored file); fall back to the sample
+const MAP_PINS = REAL_MAP_PINS.length > 0 ? REAL_MAP_PINS : MAP_PINS_SAMPLE
+
+const TOTAL_ACTIVE_JOBS = REAL_MAP_PINS.length > 0 ? REAL_TOTAL_ACTIVE_JOBS : 104
 const STAFFED_PIN_COUNT = MAP_PINS.filter((pin) => pin.status === "staffed").length
 const UNMAPPED_JOB_COUNT = Math.max(0, TOTAL_ACTIVE_JOBS - MAP_PINS.length)
 
@@ -252,7 +308,7 @@ function MapTabs({ value, onChange }: { value: string; onChange: (value: string)
   )
 }
 
-type MapPin = (typeof MAP_PINS)[number]
+type MapPin = RealMapPin
 
 /** a clean circular job pin as a Leaflet divIcon (no default white box) */
 function pinIcon(pin: MapPin) {
@@ -611,21 +667,15 @@ function BudgetStatusContent() {
         <svg
           viewBox="0 0 128 127.897"
           preserveAspectRatio="xMidYMid meet"
-          className="size-32 shrink-0 overflow-visible"
+          className="size-32 shrink-0"
           role="img"
-          aria-label="Budget status chart: 57% on track, 12% over budget, 31% no data"
+          aria-label={`Budget status chart: ${BUDGET_LEGEND.map((s) => `${s.percent.replace(/[()]/g, "")} ${s.label.toLowerCase()}`).join(", ")}`}
         >
-          <defs>
-            <filter id="budget-status-shadow" x="-12%" y="-12%" width="124%" height="124%">
-              <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000000" floodOpacity="0.18" />
-            </filter>
-          </defs>
           {BUDGET_STATUS_SEGMENTS.map((segment) => (
             <path
               key={segment.label}
               d={segment.path}
               fill={segment.color}
-              filter="url(#budget-status-shadow)"
               aria-label={`${segment.label}: ${segment.value} jobs ${segment.percent}`}
               className="cursor-default"
               style={{ touchAction: "none" }}
@@ -714,7 +764,7 @@ function ForecastBudgetPanel() {
           </div>
         </div>
         <p className="mt-3 text-[11px] leading-[15px] font-normal text-secondary">
-          24 of 104 active jobs are trending over budget
+          {JOBS_OVER_BUDGET} of {ACTIVE_JOBS_TOTAL} active jobs are trending over budget
         </p>
       </div>
     </Panel>
